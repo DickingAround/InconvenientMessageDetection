@@ -9,6 +9,7 @@
 #3.	Attempt to recover a file from the image. If no file is found, return to step 1 but this time with N=N+1.
 
 from scipy import misc
+import random
 #-------Basic tools---------
 #Low bits of the byte are at the front of the list
 def bitsToByte(bits):
@@ -80,6 +81,13 @@ def buildFile(fileName,data):
 		f.write(c)
 	f.close()	
 
+#-------Seed related functions-------
+def buildSeedFromImage(image,difficulty):
+	random.seed(buildPreSeed1(image))
+	x = buildPreSeed2(image)
+	for i in range(difficulty):
+		x = hashlib.SHA256(x+str(random.random())).hexdigest()
+	return 
 #-------Encode workflow---------
 def buildBitList(fileName):
 	listOfBits = []
@@ -99,12 +107,19 @@ def buildBitList(fileName):
 #-------Main---------
 def code(fileName,imageName):
 	image = misc.imread(imageName)
+	if not checkImageForCompatability(image):
+		return
 	listOfBits = buildBitList(fileName)
-	stitchBitsToImage(image,listOfBits)
+	seed = buildSeedFromImage(image,difficulty)
+	stitchBitsToImage(image,seed,listOfBits)
 	misc.imsave('new_'+imageName, image)
 def decode(imageName):
 	image = misc.imread(imageName)
-	fileName,data = extractDataStream(image)
+	while(1):
+		seed = buildSeedFromImage(image)
+		fileName,data = extractDataStream(image,seed)
+		if fileName != None:
+			break
 	buildFile(fileName,data)
 if __name__ == '__main__':
 	import sys
