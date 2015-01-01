@@ -82,12 +82,15 @@ def buildFile(fileName,data):
 	f.close()	
 
 #-------Seed related functions-------
+def hashPartOfImage(image,bitToUse):
+	for i in range(len(image)
+
 def buildSeedFromImage(image,difficulty):
-	random.seed(buildPreSeed1(image))
-	x = buildPreSeed2(image)
+	random.seed(hashPartOfImage(image,2))
+	x = hashPartOfImage(image,1)
 	for i in range(difficulty):
 		x = hashlib.SHA256(x+str(random.random())).hexdigest()
-	return 
+	return int(x,16)
 #-------Encode workflow---------
 def buildBitList(fileName):
 	listOfBits = []
