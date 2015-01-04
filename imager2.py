@@ -8,6 +8,7 @@
 #2.	Set the random number generator with Y
 #3.	Attempt to recover a file from the image. If no file is found, return to step 1 but this time with N=N+1.
 
+from Crypto.Cipher import AES
 from scipy import misc
 import random
 #-------Basic tools---------
@@ -50,6 +51,22 @@ def stitchBitsToImage(image,bitData):
 		i,j,k = imageBitIndex(image,n)
 		image[i][j][k] = combineBitAndByte(bitData[n],image[i][j][k])
 
+#-------Seed related functions-------
+def hashPartOfImage(image,bitToUse):
+	#Just read the first line for now
+	#TODO: Get a better selection
+	s = []
+	for i in range(len(image)):
+		s += image[i][0][bitToUse]
+	return s	
+
+def buildIntigerSeedFromImage(image,difficulty):
+	random.seed(hashPartOfImage(image,2))
+	x = hashPartOfImage(image,1)
+	for i in range(difficulty):
+		x = hashlib.SHA256(x+str(random.random())).hexdigest()
+	return int(x,16)
+
 #-------Decode workflow---------
 def extractDataStream(image):
 	data = []
@@ -81,16 +98,6 @@ def buildFile(fileName,data):
 		f.write(c)
 	f.close()	
 
-#-------Seed related functions-------
-def hashPartOfImage(image,bitToUse):
-	for i in range(len(image)
-
-def buildSeedFromImage(image,difficulty):
-	random.seed(hashPartOfImage(image,2))
-	x = hashPartOfImage(image,1)
-	for i in range(difficulty):
-		x = hashlib.SHA256(x+str(random.random())).hexdigest()
-	return int(x,16)
 #-------Encode workflow---------
 def buildBitList(fileName):
 	listOfBits = []
@@ -107,13 +114,47 @@ def buildBitList(fileName):
 	listOfBits = codeString(str(bytesRead)+"*") + listOfBits
 	return listOfBits
 
+#-------Seed related functions-------
+def hashPartOfImage(image,bitToUse):
+	#Just read the first line for now
+	#TODO: Get a better selection
+	s = []
+	for i in range(len(image)):
+		s += image[i][0][bitToUse]
+	return s	
+
+def buildIntigerSeedFromImage(image,difficulty):
+	random.seed(hashPartOfImage(image,2))
+	x = hashPartOfImage(image,1)
+	for i in range(difficulty):
+		x = hashlib.SHA256(x+str(random.random())).hexdigest()
+	return int(x,16)
+
+#-------Encryption-------
+def encrypt(raw_text, seed, iv):
+	encryptor = AES.new(seed, AES.MODE_CBC, IV=iv)
+	#Remember, this must be a multiple of 16 now
+	#However, we want to contain any encrypt-related hacks
+	#So we'll add on a number saying how many chars to remove at the end
+	numbExtraCharsNeeded = (16-len(raw_text)%16)	
+	raw_text = raw_text + numbExtraCharsNeeded*' '
+	raw_text[-1] = hex(numbExtraCharsNeeded)[-1]
+	return encryptor.encrypt(raw_text)
+
+def decrypt(seed, iv):
+	decryptor = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+	plain_text = decryption_suite.decrypt(cipher_text)
+	
+
 #-------Main---------
 def code(fileName,imageName):
 	image = misc.imread(imageName)
 	if not checkImageForCompatability(image):
 		return
-	listOfBits = buildBitList(fileName)
-	seed = buildSeedFromImage(image,difficulty)
+	seed = buildIntigerSeedFromImage(image,difficulty)
+	fileContents = readFile(fileName)
+	encryptedContents = encrypt(fileContents,seed)
+	listOfBits = buildBitList(encryptedContents)
 	stitchBitsToImage(image,seed,listOfBits)
 	misc.imsave('new_'+imageName, image)
 def decode(imageName):
