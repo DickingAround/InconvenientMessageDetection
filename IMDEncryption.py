@@ -1,0 +1,25 @@
+from Crypto.Cipher import AES
+def encrypt(raw_text, seed, iv):
+	#We don't technically need the initalization vector *and* key here 
+	#since we're deriving both from the content, 
+	#but no harm in having them and it's better not to break the
+	#abstraction the encryption libraries offer
+	
+	iv = iv[:16]#IV must be 16 bytes long
+	key = key[:32]#key must be 32 bytes long
+        encryptor = AES.new(seed, AES.MODE_CBC, IV=iv)
+        #We want to contain any encrypt-related hacks to the content
+        #So we'll add on a number saying how many chars to remove at the end
+        numbExtraCharsNeeded = (16-len(raw_text)%16)  
+        plain_text = raw_text + (numbExtraCharsNeeded-1)*' ' + hex(numbExtraCharsNeeded)[-1]
+        return encryptor.encrypt(plain_text)
+
+def decrypt(cypher_text,seed, iv):
+	iv = iv[:16]#IV must be 16 bytes long
+	key = key[:32]#key must be 32 bytes long
+        decryptor = AES.new(seed, AES.MODE_CBC, IV=iv)
+        plain_text = decryptor.decrypt(cipher_text)
+        #Again, remember to cut off the extra data we had to add when encrypting
+        raw_text = plain_text[:len(plain_text)-int(plain_text[-1],16)]
+        return raw_text
+
