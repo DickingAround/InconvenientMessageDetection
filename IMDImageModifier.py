@@ -1,5 +1,4 @@
-#-------Basic tools---------
-#Low bits of the byte are at the front of the list
+#-------Bit tools---------
 def bitsToByte(bits):
 	byte = 0
 	for i in range(8):
@@ -14,19 +13,31 @@ def combineBitAndByte(bit,byte):
 	return (byte&254)|(bit&1)
 def extractBitFromByte(byte):
 	return byte&1
-def codeString(s):
+def byteArrayToBitArray(s):
 	listOfBits = []
 	for c in s:
 		listOfBits = listOfBits + byteToBits(c)
 	return listOfBits
+#----------Image tools------------
+def getIndexOfLocation(image,[i,k,j]):
+	if(i >= len(image) or k >= len(image[0]) or j >= len(image[0][0])):
+		raise Exception("Location does not have an index in this image")
+	return i*len(image[0])*len(image[0][0]) + k*len(image[0][0]) + j	
+def getLocationOfIndex(image,index):
+	if(index >= len(image)*len(image[0])*len(image[0][0])):
+		raise Exception("Image index out of range for this image")
+	i = int(index/(len(image[0][0])*len(image[0]))
+	j = int(index/len(image[0][0]))%len(image[0])
+	k = index%len(image[0][0])
+	return [i,j,k]
+def indexAndLocation_test():
+	image = [[[0,0,0] for x in range(7)] for x in range(5)]
+	if(getIndexOfLocation(image,[1,1,1]) != 1*7*3+1*3+1):
+		raise Exception("Index and location test 1 failed")
+	elif(getIndexOfLocation(image,[2,2,2]) != 2*7*3+2*3+2):
+		raise Exception("Index and location test 2 failed")
+	return 1
 
-def imageBitIndex(image,index):
-	i = int(index/len(image[0]))
-	if(i >= len(image)):
-		raise Exception("Image file too small")
-	j = index%len(image[0])
-	k = index%3
-	return i,j,k
 def extractByteFromImage(image,index):
 	bits = []
 	for n in range(0,8):
@@ -54,3 +65,9 @@ def buildIntigerSeedFromImage(image,difficulty):
 		x = hashlib.SHA256(x+str(random.random())).hexdigest()
 	return int(x,16)
 
+#---------Tests---------
+
+def IMDImageModifier_test():
+	
+  
+IMDImageModifier_test()
