@@ -19,22 +19,22 @@ def byteArrayToBitArray(s):
 		listOfBits = listOfBits + byteToBits(c)
 	return listOfBits
 #----------Image tools------------
-def getIndexOfLocation(image,[i,k,j]):
+def getIndexOfLocation(image,i,k,j):
 	if(i >= len(image) or k >= len(image[0]) or j >= len(image[0][0])):
 		raise Exception("Location does not have an index in this image")
 	return i*len(image[0])*len(image[0][0]) + k*len(image[0][0]) + j	
 def getLocationOfIndex(image,index):
 	if(index >= len(image)*len(image[0])*len(image[0][0])):
 		raise Exception("Image index out of range for this image")
-	i = int(index/(len(image[0][0])*len(image[0]))
+	i = int(index/(len(image[0][0])*len(image[0])))
 	j = int(index/len(image[0][0]))%len(image[0])
 	k = index%len(image[0][0])
-	return [i,j,k]
+	return i,j,k
 def indexAndLocation_test():
 	image = [[[0,0,0] for x in range(7)] for x in range(5)]
-	if(getIndexOfLocation(image,[1,1,1]) != 1*7*3+1*3+1):
+	if(getIndexOfLocation(image,1,1,1) != 1*7*3+1*3+1):
 		raise Exception("Index and location test 1 failed")
-	elif(getIndexOfLocation(image,[2,2,2]) != 2*7*3+2*3+2):
+	elif(getIndexOfLocation(image,2,2,2) != 2*7*3+2*3+2):
 		raise Exception("Index and location test 2 failed")
 	return 1
 
@@ -68,6 +68,7 @@ def buildIntigerSeedFromImage(image,difficulty):
 #---------Tests---------
 
 def IMDImageModifier_test():
-	
+	indexAndLocation_test()
+	print "IMDImageModifier tests passed"
   
 IMDImageModifier_test()
