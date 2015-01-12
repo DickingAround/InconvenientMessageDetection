@@ -11,61 +11,8 @@
 from Crypto.Cipher import AES
 from scipy import misc
 import random
-#-------Basic tools---------
-#Low bits of the byte are at the front of the list
-def bitsToByte(bits):
-	byte = 0
-	for i in range(8):
-		byte = byte|(bits[i]<<i)
-	return chr(byte)
-def byteToBits(b):
-	listOfBits = []
-	for i in range(8):
-		listOfBits.append((ord(b)>>i)&1) 
-	return listOfBits
-def combineBitAndByte(bit,byte):
-	return (byte&254)|(bit&1)
-def extractBitFromByte(byte):
-	return byte&1
-def codeString(s):
-	listOfBits = []
-	for c in s:
-		listOfBits = listOfBits + byteToBits(c)
-	return listOfBits
-
-def imageBitIndex(image,index):
-	i = int(index/len(image[0]))
-	if(i >= len(image)):
-		raise Exception("Image file too small")
-	j = index%len(image[0])
-	k = index%3
-	return i,j,k
-def extractByteFromImage(image,index):
-	bits = []
-	for n in range(0,8):
-		i,j,k = imageBitIndex(image,index*8+n)
-		bits.append(extractBitFromByte(image[i][j][k]))
-	return bitsToByte(bits)
-def stitchBitsToImage(image,bitData):
-	for n in range(0,len(bitData)):
-		i,j,k = imageBitIndex(image,n)
-		image[i][j][k] = combineBitAndByte(bitData[n],image[i][j][k])
-
-#-------Seed related functions-------
-def hashPartOfImage(image,bitToUse):
-	#Just read the first line for now
-	#TODO: Get a better selection
-	s = []
-	for i in range(len(image)):
-		s += image[i][0][bitToUse]
-	return s	
-
-def buildIntigerSeedFromImage(image,difficulty):
-	random.seed(hashPartOfImage(image,2))
-	x = hashPartOfImage(image,1)
-	for i in range(difficulty):
-		x = hashlib.SHA256(x+str(random.random())).hexdigest()
-	return int(x,16)
+import IMDEncryption as encryption
+import IMDImageModifier as imageMod
 
 #-------Decode workflow---------
 def extractDataStream(image):
@@ -77,20 +24,20 @@ def extractDataStream(image):
 	currentByte = '-'
 	i = 0
 	while(currentByte != '*'):	
-		currentByte = extractByteFromImage(image,i)
+		currentByte = imageMod.extractByteFromImage(image,i)
 		byteLengthString += currentByte
 		i += 1
 	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
 	#-- Get the name --
 	currentByte = '-'
 	while(currentByte != '*'):	
-		currentByte = extractByteFromImage(image,i)
+		currentByte = imageMod.extractByteFromImage(image,i)
 		fileName += currentByte
 		i += 1
 	fileName = fileName[:len(fileName)-1]
 	#-- Get the data --
 	for j in range(i,i+byteLengthValue):
-		data.append(extractByteFromImage(image,j))
+		data.append(imageMod.extractByteFromImage(image,j))
 	return fileName,data
 def buildFile(fileName,data):
 	f = open(fileName,'wb')
@@ -107,63 +54,34 @@ def buildBitList(fileName):
 	bytesRead = 0
 	while byte != "":
 		bytesRead += 1
-		listOfBits += byteToBits(byte)	
+		listOfBits += imageMod.byteToBits(byte)	
 		byte = f.read(1)
 	f.close()
 	listOfBits = codeString(fileName+"*") + listOfBits
 	listOfBits = codeString(str(bytesRead)+"*") + listOfBits
 	return listOfBits
 
-#-------Seed related functions-------
-def hashPartOfImage(image,bitToUse):
-	#Just read the first line for now
-	#TODO: Get a better selection
-	s = []
-	for i in range(len(image)):
-		s += image[i][0][bitToUse]
-	return s	
-
-def buildIntigerSeedFromImage(image,difficulty):
-	random.seed(hashPartOfImage(image,2))
-	x = hashPartOfImage(image,1)
-	for i in range(difficulty):
-		x = hashlib.SHA256(x+str(random.random())).hexdigest()
-	return int(x,16)
-
-#-------Encryption-------
-def encrypt(raw_text, seed, iv):
-	encryptor = AES.new(seed, AES.MODE_CBC, IV=iv)
-	#Remember, this must be a multiple of 16 now
-	#However, we want to contain any encrypt-related hacks
-	#So we'll add on a number saying how many chars to remove at the end
-	numbExtraCharsNeeded = (16-len(raw_text)%16)	
-	raw_text = raw_text + numbExtraCharsNeeded*' '
-	raw_text[-1] = hex(numbExtraCharsNeeded)[-1]
-	return encryptor.encrypt(raw_text)
-
-def decrypt(seed, iv):
-	decryptor = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-	plain_text = decryption_suite.decrypt(cipher_text)
-	
-
 #-------Main---------
 def code(fileName,imageName):
 	image = misc.imread(imageName)
-	if not checkImageForCompatability(image):
-		return
-	seed = buildIntigerSeedFromImage(image,difficulty)
+	if not imageMod.checkImageForCompatability(imageName):
+		print "Imcompatible image; must be tiff, gif, bmp, or png"
+		return 
+	seed = imageMod.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
-	encryptedContents = encrypt(fileContents,seed)
-	listOfBits = buildBitList(encryptedContents)
-	stitchBitsToImage(image,seed,listOfBits)
+	encryptedContents = encryption.encrypt(fileContents,seed)
+	listOfBits = imageMod.buildBitList(encryptedContents)
+	imageMod.stitchBitsToImage(image,seed,listOfBits)
 	misc.imsave('new_'+imageName, image)
 def decode(imageName):
 	image = misc.imread(imageName)
+	difficulty = 0
 	while(1):
-		seed = buildSeedFromImage(image)
+		seed = imageMod.buildIntigerSeedFromImage(image,difficulty)
 		fileName,data = extractDataStream(image,seed)
 		if fileName != None:
 			break
+		difficulty += 1
 	buildFile(fileName,data)
 if __name__ == '__main__':
 	import sys

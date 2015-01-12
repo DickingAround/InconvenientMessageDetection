@@ -9,16 +9,24 @@ def byteToBits(b):
 	for i in range(8):
 		listOfBits.append((ord(b)>>i)&1) 
 	return listOfBits
-def combineBitAndByte(bit,byte):
-	return (byte&254)|(bit&1)
-def extractBitFromByte(byte):
-	return byte&1
+def writeBitToByte(bit,byte,bitToUse):
+	return (byte&(255-pow(2,bitToUse)))|(bit&pow(2,bitToUse))
+def readBitFromByte(byte,bitToUse):
+	return (byte&pow(2,bitToUse))>>bitToUse
 def byteArrayToBitArray(s):
 	listOfBits = []
 	for c in s:
 		listOfBits = listOfBits + byteToBits(c)
 	return listOfBits
-#----------Image tools------------
+
+def bitFunctions_test():
+	if(readBitFromByte(6,0) != 0):
+		raise Exception("Failed bit functions test 1")
+	if(readBitFromByte(4,2) != 1):
+		raise Exception("Failed bit functions test 2")
+	return 1
+
+#-------Image index functions------------
 def getIndexOfLocation(image,i,k,j):
 	if(i >= len(image) or k >= len(image[0]) or j >= len(image[0][0])):
 		raise Exception("Location does not have an index in this image")
@@ -37,7 +45,7 @@ def indexAndLocation_test():
 	elif(getIndexOfLocation(image,2,2,2) != 2*7*3+2*3+2):
 		raise Exception("Index and location test 2 failed")
 	return 1
-
+#-------Image changing functions-------
 def extractByteFromImage(image,index):
 	bits = []
 	for n in range(0,8):
@@ -50,25 +58,38 @@ def stitchBitsToImage(image,bitData):
 		image[i][j][k] = combineBitAndByte(bitData[n],image[i][j][k])
 
 #-------Seed related functions-------
-def hashPartOfImage(image,bitToUse):
-	#Just read the first line for now
-	#TODO: Get a better selection
-	s = []
-	for i in range(len(image)):
-		s += image[i][0][bitToUse]
-	return s	
-
+def hashImage(image,bitToUse):
+	#Need a string at least 32 long. Take the first 32 rows.
+	#For each row, take the bits and group into 8 to turn into chars.
+	#TODO: Come up with a better system, 
+	c = []	
+	bits = [0,0,0,0, 0,0,0,0]
+	for i in range(int(len(image)/2),int(len(image)/2)+32):
+		for j in range(int(len(image[0])/2),int(len(image[0])/2)+8):#range(len(image[0])):
+			bits[j] = readBitFromByte(image[i][j][1],bitToUse) 
+		c += bitToByte(bits)
+	return c	
+				
 def buildIntigerSeedFromImage(image,difficulty):
 	random.seed(hashPartOfImage(image,2))
 	x = hashPartOfImage(image,1)
-	for i in range(difficulty):
+	for i in range(difficulty*1000):
 		x = hashlib.SHA256(x+str(random.random())).hexdigest()
 	return int(x,16)
 
-#---------Tests---------
+#---------Basic tests to make sure this image will work-------
+def checkForImageCompatability():
+	imageExtension = imageName.split('.')[1] 
+	if imageExtension != 'png' or imageExtension != 'bmp' or imageExtension != 'tiff' or imageExtension != 'gif':
+		return 1
+	else
+		return 0
+		
 
+#---------Tests---------
 def IMDImageModifier_test():
 	indexAndLocation_test()
+	bitFunctions_test()
 	print "IMDImageModifier tests passed"
   
 IMDImageModifier_test()
