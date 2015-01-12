@@ -62,27 +62,35 @@ def hashImage(image,bitToUse):
 	#Need a string at least 32 long. Take the first 32 rows.
 	#For each row, take the bits and group into 8 to turn into chars.
 	#TODO: Come up with a better system, 
-	c = []	
+	c = ''
 	bits = [0,0,0,0, 0,0,0,0]
 	for i in range(int(len(image)/2),int(len(image)/2)+32):
-		for j in range(int(len(image[0])/2),int(len(image[0])/2)+8):#range(len(image[0])):
-			bits[j] = readBitFromByte(image[i][j][1],bitToUse) 
-		c += bitToByte(bits)
+		for j in range(8):
+			bits[j] = readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse) 
+		c += bitsToByte(bits)
 	return c	
 				
 def buildIntigerSeedFromImage(image,difficulty):
-	random.seed(hashPartOfImage(image,2))
-	x = hashPartOfImage(image,1)
+	random.seed(hashImage(image,2))
+	x = hashImage(image,1)
 	for i in range(difficulty*1000):
 		x = hashlib.SHA256(x+str(random.random())).hexdigest()
 	return int(x,16)
+
+def seedAndHash_test():
+	image = [[[4,4,4] for x in range(100)] for x in range(100)]
+	h_got = hashImage(image,2)
+	h_expected = '\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
+	if(h_got != h_expected):
+		raise Exception("Hash of image test failed")
+	return 1
 
 #---------Basic tests to make sure this image will work-------
 def checkForImageCompatability():
 	imageExtension = imageName.split('.')[1] 
 	if imageExtension != 'png' or imageExtension != 'bmp' or imageExtension != 'tiff' or imageExtension != 'gif':
 		return 1
-	else
+	else:
 		return 0
 		
 
@@ -90,6 +98,7 @@ def checkForImageCompatability():
 def IMDImageModifier_test():
 	indexAndLocation_test()
 	bitFunctions_test()
+	seedAndHash_test()
 	print "IMDImageModifier tests passed"
   
 IMDImageModifier_test()
