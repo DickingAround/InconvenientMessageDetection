@@ -1,3 +1,5 @@
+import random
+import hashlib
 #-------Bit tools---------
 def bitsToByte(bits):
 	byte = 0
@@ -74,7 +76,7 @@ def buildIntigerSeedFromImage(image,difficulty):
 	random.seed(hashImage(image,2))
 	x = hashImage(image,1)
 	for i in range(difficulty*1000):
-		x = hashlib.SHA256(x+str(random.random())).hexdigest()
+		x = hashlib.sha256(x+str(random.random())).hexdigest()
 	return int(x,16)
 
 def seedAndHash_test():
@@ -83,6 +85,7 @@ def seedAndHash_test():
 	h_expected = '\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
 	if(h_got != h_expected):
 		raise Exception("Hash of image test failed")
+	buildIntigerSeedFromImage(image,1)
 	return 1
 
 #---------Basic tests to make sure this image will work-------
