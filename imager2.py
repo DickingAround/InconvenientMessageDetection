@@ -76,7 +76,6 @@ if __name__ == '__main__':
 	import sys
 	if(sys.argv[1] == '-t'):
 		code('testFile.txt','testImg.png')		
-		#print "No tests"
 	elif(sys.argv[2] == 'd'):
 		decode(sys.argv[1])
 	else:
