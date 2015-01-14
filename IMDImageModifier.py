@@ -1,5 +1,6 @@
 import random
 import hashlib
+from scipy import misc
 #-------Bit tools---------
 def bitsToByte(bits):
 	byte = 0
@@ -28,6 +29,9 @@ def bitFunctions_test():
 		raise Exception("Failed bit functions test 2")
 	return 1
 
+#-------Get image----------
+def getImageArray(imageName):
+	return misc.imread(imageName)
 #-------Image index functions------------
 def getIndexOfLocation(image,i,k,j):
 	if(i >= len(image) or k >= len(image[0]) or j >= len(image[0][0])):
@@ -54,7 +58,9 @@ def extractByteFromImage(image,index):
 		i,j,k = imageBitIndex(image,index*8+n)
 		bits.append(extractBitFromByte(image[i][j][k]))
 	return bitsToByte(bits)
-def stitchBitsToImage(image,bitData):
+def stitchBitsToImage(image,key,bitData):
+	random.seed(key)
+	#TODO: This needs to actually jump around randomly
 	for n in range(0,len(bitData)):
 		i,j,k = imageBitIndex(image,n)
 		image[i][j][k] = combineBitAndByte(bitData[n],image[i][j][k])
@@ -73,11 +79,13 @@ def hashImage(image,bitToUse):
 	return c	
 				
 def buildIntigerSeedFromImage(image,difficulty):
-	random.seed(hashImage(image,2))
-	x = hashImage(image,1)
-	for i in range(difficulty*1000):
-		x = hashlib.sha256(x+str(random.random())).hexdigest()
-	return int(x,16)
+	randSeed = hashImage(image,2)
+	random.seed(randSeed)
+	iv = hashlib.sha256(hashImage(image,3)).hexdigest()
+	key = hashImage(image,1)
+	for i in range(difficulty):
+		key = hashlib.sha256(key+str(random.random())).hexdigest()
+	return int(key,16), int(iv,16)
 
 def seedAndHash_test():
 	image = [[[4,4,4] for x in range(100)] for x in range(100)]
@@ -85,11 +93,13 @@ def seedAndHash_test():
 	h_expected = '\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
 	if(h_got != h_expected):
 		raise Exception("Hash of image test failed")
-	buildIntigerSeedFromImage(image,1)
+	buildIntigerSeedFromImage(image,3)
+	image = getImageArray("testImg.png")
+	buildIntigerSeedFromImage(image,3)
 	return 1
 
 #---------Basic tests to make sure this image will work-------
-def checkForImageCompatability():
+def checkImageForCompatability(imageName):
 	imageExtension = imageName.split('.')[1] 
 	if imageExtension != 'png' or imageExtension != 'bmp' or imageExtension != 'tiff' or imageExtension != 'gif':
 		return 1
