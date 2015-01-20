@@ -40,13 +40,13 @@ def readFile(fileName):
 	data = f.read()
 	f.close()
 	return data	
-def buildBitList(listOfBytes):
+def buildBitList(fileName,listOfBytes):
 	listOfBits = []
 	#fileLength*fileName*bitsOfTheFile
 	for byte in listOfBytes:
 		listOfBits += imageMod.byteToBits(byte)	
-	listOfBits = codeString(fileName+"*") + listOfBits
-	listOfBits = codeString(str(len(listOfBytes))+"*") + listOfBits
+	listOfBits = imageMod.byteArrayToBitArray(fileName+"*") + listOfBits
+	listOfBits = imageMod.byteArrayToBitArray(str(len(listOfBytes))+"*") + listOfBits
 	return listOfBits
 
 #-------Main---------
@@ -59,9 +59,9 @@ def code(fileName,imageName):
 	key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
-	listOfBits = buildBitList(encryptedContents)
+	listOfBits = buildBitList(fileName,encryptedContents)
 	imageMod.stitchBitsToImage(image,key,listOfBits)
-	misc.imsave('new_'+imageName, image)
+	imageMod.saveImage('new_'+imageName,image)
 def decode(imageName):
 	image = misc.imread(imageName)
 	difficulty = 1

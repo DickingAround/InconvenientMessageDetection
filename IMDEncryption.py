@@ -4,7 +4,6 @@ def encrypt(raw_text, key, iv):
 	#since we're deriving both from the content, 
 	#but no harm in having them and it's better not to break the
 	#abstraction the encryption libraries offer
-	
 	iv = iv[:16]#IV must be 16 bytes long
 	key = key[:32]#key must be 32 bytes long
         encryptor = AES.new(key, AES.MODE_CBC, IV=iv)

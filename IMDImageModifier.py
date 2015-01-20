@@ -32,6 +32,9 @@ def bitFunctions_test():
 #-------Get image----------
 def getImageArray(imageName):
 	return misc.imread(imageName)
+def saveImage(name, image):
+	misc.imsave(name, image)
+
 #-------Image index functions------------
 def getIndexOfLocation(image,i,k,j):
 	if(i >= len(image) or k >= len(image[0]) or j >= len(image[0][0])):
@@ -62,8 +65,8 @@ def stitchBitsToImage(image,key,bitData):
 	random.seed(key)
 	#TODO: This needs to actually jump around randomly
 	for n in range(0,len(bitData)):
-		i,j,k = imageBitIndex(image,n)
-		image[i][j][k] = combineBitAndByte(bitData[n],image[i][j][k])
+		i,j,k = getLocationOfIndex(image,n)
+		image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
 
 #-------Seed related functions-------
 def hashImage(image,bitToUse):
@@ -85,7 +88,7 @@ def buildIntigerSeedFromImage(image,difficulty):
 	key = hashImage(image,1)
 	for i in range(difficulty):
 		key = hashlib.sha256(key+str(random.random())).hexdigest()
-	return int(key,16), int(iv,16)
+	return str(int(key,16)), str(int(iv,16))
 
 def seedAndHash_test():
 	image = [[[4,4,4] for x in range(100)] for x in range(100)]
