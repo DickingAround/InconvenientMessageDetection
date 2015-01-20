@@ -58,9 +58,35 @@ def indexAndLocation_test():
 def extractByteFromImage(image,index):
 	bits = []
 	for n in range(0,8):
-		i,j,k = imageBitIndex(image,index*8+n)
-		bits.append(extractBitFromByte(image[i][j][k]))
+		i,j,k = getLocationOfIndex(image,index*8+n)
+		bits.append(readBitFromByte(image[i][j][k],0))
 	return bitsToByte(bits)
+def extractDataStream(image,key):
+	random.seed(key)
+	data = []
+	fileName = ''
+	byteLenghtValue = 0
+	#-- Get the length --
+	byteLengthString = ''
+	currentByte = '-'
+	i = 0
+	while(currentByte != '*'):
+		currentByte = extractByteFromImage(image,i)
+		byteLengthString += currentByte
+		i += 1
+	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
+	#-- Get the name --
+	currentByte = '-'
+	while(currentByte != '*'):
+		currentByte = extractByteFromImage(image,i)
+                fileName += currentByte
+		i += 1
+	fileName = fileName[:len(fileName)-1]
+	#-- Get the data --
+	for j in range(i,i+byteLengthValue):
+		data.append(extractByteFromImage(image,j))
+	contents = ''.join(data)
+	return fileName,contents
 def stitchBitsToImage(image,key,bitData):
 	random.seed(key)
 	#TODO: This needs to actually jump around randomly

@@ -4,7 +4,7 @@ import IMDEncryption as encryption
 import IMDImageModifier as imageMod
 
 #-------Decode workflow---------
-def extractDataStream(image):
+def extractDataStream(image,key):
 	data = []
 	fileName = ''
 	byteLenghtValue = 0
@@ -59,23 +59,28 @@ def code(fileName,imageName):
 	key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
+	print encryptedContents
 	listOfBits = buildBitList(fileName,encryptedContents)
 	imageMod.stitchBitsToImage(image,key,listOfBits)
 	imageMod.saveImage('new_'+imageName,image)
 def decode(imageName):
-	image = misc.imread(imageName)
-	difficulty = 1
+	image = imageMod.getImageArray(imageName)	
+	difficulty = 3
 	while(1):
-		seed = imageMod.buildIntigerSeedFromImage(image,difficulty)
-		fileName,data = extractDataStream(image,seed)
+		print "Trying with difficulty ",difficulty
+		key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
+		fileName,encryptedContents = imageMod.extractDataStream(image,key)	
 		if fileName != None:
 			break
 		difficulty += 1
-	buildFile(fileName,data)
+	print encryptedContents
+	decryptedContents = encryption.decrypt(encryptedContents,key,iv)
+	buildFile('new_'+fileName,decryptedContents)
 if __name__ == '__main__':
 	import sys
 	if(sys.argv[1] == '-t'):
 		code('testFile.txt','testImg.png')		
+		decode('new_testImg.png')
 	elif(sys.argv[2] == 'd'):
 		decode(sys.argv[1])
 	else:
