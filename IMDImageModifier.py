@@ -54,6 +54,37 @@ def indexAndLocation_test():
 	elif(getIndexOfLocation(image,2,2,2) != 2*7*3+2*3+2):
 		raise Exception("Index and location test 2 failed")
 	return 1
+#-------Functions to check if this bit is safe to change--------
+usedPixels = {}
+def checkAndMarkThisPixel(i,j,k):
+	if not str(i)+str(j)+str(k) in usedPixels:
+		usedPixels[str(i)+str(j)+str(k)] = True
+		return True
+	return False
+def isThisPixelSaturated(image,i,j,k):
+	if(image[i][j][k] == 0 or image[i][j][k] == 255):
+		return True
+	return False
+def doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,x,y,z):
+	if(image[i][j][k] == image[x][y][z]):
+		return True	
+def isThisPixelSafe(image,i,j,k):
+	#If any color of this bit is saturated
+	#Or if a nearby bit is saturated
+	#Or if this color is too close to a nearby colora
+	#Or if we already changed this bit
+	if isThisPixelSaturated(image,i,j,k):
+		return False
+	if(checkIfThisPixelMakesANearbyOneUnsafe(image,i,j,k,i+1,j,k)
+		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i-1,j,k)
+		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j+1,k)
+		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j-1,k)
+		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j,k+1)
+		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j,k-1)):
+		return False
+	if checkAndMarkThisPixel(i,j,k):
+		return True
+	return False
 #-------Image changing functions-------
 def extractByteFromImage(image,index):
 	bits = []
@@ -141,6 +172,6 @@ def IMDImageModifier_test():
 	indexAndLocation_test()
 	bitFunctions_test()
 	seedAndHash_test()
-	print "IMDImageModifier tests passed"
+	print "Passed: IMDImageModifier tests"
   
 IMDImageModifier_test()

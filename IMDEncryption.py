@@ -29,10 +29,10 @@ def IMDEncryption_test():
 	msg_encrypted = encrypt(msg,key,iv)
 	msg_found = decrypt(msg_encrypted,key,iv)
 	if( msg == msg_found):
-		print "IMDEncryption_test: Passed"
+		print "Passed: IMDEncryption_test"
 		return 1
 	else:
-		print "IMDEncryption_test: Failed"
+		print "Failed: IMDEncryption_test"
 		print "Old msg: ",msg
 		print "New msg: ",msg_found
 		return 0

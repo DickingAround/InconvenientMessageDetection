@@ -59,7 +59,6 @@ def code(fileName,imageName):
 	key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
-	print encryptedContents
 	listOfBits = buildBitList(fileName,encryptedContents)
 	imageMod.stitchBitsToImage(image,key,listOfBits)
 	imageMod.saveImage('new_'+imageName,image)
@@ -73,7 +72,6 @@ def decode(imageName):
 		if fileName != None:
 			break
 		difficulty += 1
-	print encryptedContents
 	decryptedContents = encryption.decrypt(encryptedContents,key,iv)
 	buildFile('new_'+fileName,decryptedContents)
 if __name__ == '__main__':
@@ -81,6 +79,12 @@ if __name__ == '__main__':
 	if(sys.argv[1] == '-t'):
 		code('testFile.txt','testImg.png')		
 		decode('new_testImg.png')
+		f1 = open('testFile.txt','r')
+		f2 = open('new_testFile.txt','r')
+		c1 = f1.read()
+		c2 = f2.read()
+		if(c1 == c2):
+			print "Passed: Overall test to encrypt and decrypt"	
 	elif(sys.argv[2] == 'd'):
 		decode(sys.argv[1])
 	else:
