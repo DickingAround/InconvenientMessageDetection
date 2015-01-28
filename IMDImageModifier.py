@@ -62,7 +62,7 @@ def checkAndMarkThisPixel(i,j,k):
 		return True
 	return False
 def isThisPixelSaturated(image,i,j,k):
-	if(image[i][j][k] == 0 or image[i][j][k] == 255):
+	if(image[i][j][k] in [0,1,254,255]):
 		return True
 	return False
 def doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,x,y,z):
@@ -73,8 +73,10 @@ def isThisPixelSafe(image,i,j,k):
 	#Or if a nearby bit is saturated
 	#Or if this color is too close to a nearby colora
 	#Or if we already changed this bit
+	
 	if isThisPixelSaturated(image,i,j,k):
 		return False
+	'''
 	if(doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i+1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i-1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j+1,k)
@@ -85,23 +87,32 @@ def isThisPixelSafe(image,i,j,k):
 	if checkAndMarkThisPixel(i,j,k):
 		return True
 	return False
+	'''
+	return True
 #-------Image changing functions-------
 def stitchBitsToImage(image,key,bitData):
 	random.seed(key)
 	#TODO: This needs to actually jump around randomly
-	for n in range(0,len(bitData)):
-		i,j,k = getLocationOfIndex(image,n)
-		#if(isThisPixelSafe(image,i,j,k)):
-		image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
+	n = 0
+	index = 0
+	while n < len(bitData):
+		i,j,k = getLocationOfIndex(image,index)
+		if(isThisPixelSafe(image,i,j,k)):
+			image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
+			n += 1
+		index += 1
 
 def extractByteFromImage(image,index):
 	bits = []
 	n = 0
 	while n < 8:
 		i,j,k = getLocationOfIndex(image,index)
-		#if(isThisPixelSafe(image,i,j,k)):
-		bits.append(readBitFromByte(image[i][j][k],0))
-		n += 1
+		if(isThisPixelSafe(image,i,j,k)):
+			#print "Reading from %i,%i,%i"%(i,j,k)
+			bits.append(readBitFromByte(image[i][j][k],0))
+			n += 1
+		#else:
+			#print "Not reading from %i,%i,%i"%(i,j,k)
 		index += 1	
 	return index,bitsToByte(bits)
 def extractDataStream(image,key):
