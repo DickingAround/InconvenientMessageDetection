@@ -66,7 +66,7 @@ def isThisPixelSaturated(image,i,j,k):
 		return True
 	return False
 def doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,x,y,z):
-	if(image[i][j][k] == image[x][y][z]):
+	if(image[i][j][k] == image[x%len(image)][y%len(image[0])][z%len(image[0][0])]):
 		return True	
 def isThisPixelSafe(image,i,j,k):
 	#If any color of this bit is saturated
@@ -75,7 +75,7 @@ def isThisPixelSafe(image,i,j,k):
 	#Or if we already changed this bit
 	if isThisPixelSaturated(image,i,j,k):
 		return False
-	if(checkIfThisPixelMakesANearbyOneUnsafe(image,i,j,k,i+1,j,k)
+	if(doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i+1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i-1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j+1,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j-1,k)
@@ -86,12 +86,24 @@ def isThisPixelSafe(image,i,j,k):
 		return True
 	return False
 #-------Image changing functions-------
+def stitchBitsToImage(image,key,bitData):
+	random.seed(key)
+	#TODO: This needs to actually jump around randomly
+	for n in range(0,len(bitData)):
+		i,j,k = getLocationOfIndex(image,n)
+		#if(isThisPixelSafe(image,i,j,k)):
+		image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
+
 def extractByteFromImage(image,index):
 	bits = []
-	for n in range(0,8):
-		i,j,k = getLocationOfIndex(image,index*8+n)
+	n = 0
+	while n < 8:
+		i,j,k = getLocationOfIndex(image,index)
+		#if(isThisPixelSafe(image,i,j,k)):
 		bits.append(readBitFromByte(image[i][j][k],0))
-	return bitsToByte(bits)
+		n += 1
+		index += 1	
+	return index,bitsToByte(bits)
 def extractDataStream(image,key):
 	random.seed(key)
 	data = []
@@ -102,28 +114,21 @@ def extractDataStream(image,key):
 	currentByte = '-'
 	i = 0
 	while(currentByte != '*'):
-		currentByte = extractByteFromImage(image,i)
+		i,currentByte = extractByteFromImage(image,i)
 		byteLengthString += currentByte
-		i += 1
 	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
 	#-- Get the name --
 	currentByte = '-'
 	while(currentByte != '*'):
-		currentByte = extractByteFromImage(image,i)
+		i,currentByte = extractByteFromImage(image,i)
                 fileName += currentByte
-		i += 1
 	fileName = fileName[:len(fileName)-1]
 	#-- Get the data --
-	for j in range(i,i+byteLengthValue):
-		data.append(extractByteFromImage(image,j))
+	for j in range(byteLengthValue):
+		i,currentByte = extractByteFromImage(image,i)
+		data.append(currentByte)
 	contents = ''.join(data)
 	return fileName,contents
-def stitchBitsToImage(image,key,bitData):
-	random.seed(key)
-	#TODO: This needs to actually jump around randomly
-	for n in range(0,len(bitData)):
-		i,j,k = getLocationOfIndex(image,n)
-		image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
 
 #-------Seed related functions-------
 def hashImage(image,bitToUse):
