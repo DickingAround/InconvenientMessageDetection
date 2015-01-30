@@ -3,7 +3,7 @@ import random
 import IMDEncryption as encryption
 import IMDImageModifier as imageMod
 import os
-
+import IMDBitTools as bitTools
 def buildFile(fileName,data):
 	f = open(fileName,'wb')
 	for c in data:
@@ -20,9 +20,9 @@ def buildBitList(fileName,listOfBytes):
 	listOfBits = []
 	#fileLength*fileName*bitsOfTheFile
 	for byte in listOfBytes:
-		listOfBits += imageMod.byteToBits(byte)	
-	listOfBits = imageMod.byteArrayToBitArray(fileName+"*") + listOfBits
-	listOfBits = imageMod.byteArrayToBitArray(str(len(listOfBytes))+"*") + listOfBits
+		listOfBits += bitTools.byteToBits(byte)	
+	listOfBits = bitTools.byteArrayToBitArray(fileName+"*") + listOfBits
+	listOfBits = bitTools.byteArrayToBitArray(str(len(listOfBytes))+"*") + listOfBits
 	return listOfBits
 
 #-------Main---------

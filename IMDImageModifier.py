@@ -1,8 +1,9 @@
 import random
 import hashlib
+import IMDBitTools as bitTools
 from scipy import misc
 #-------Bit tools---------
-def bitsToByte(bits):
+'''def bitsToByte(bits):
 	byte = 0
 	for i in range(8):
 		byte = byte|(bits[i]<<i)
@@ -28,7 +29,7 @@ def bitFunctions_test():
 	if(readBitFromByte(4,2) != 1):
 		raise Exception("Failed bit functions test 2")
 	return 1
-
+'''
 #-------Get image----------
 def getImageArray(imageName):
 	return misc.imread(imageName)
@@ -54,6 +55,7 @@ def indexAndLocation_test():
 	elif(getIndexOfLocation(image,2,2,2) != 2*7*3+2*3+2):
 		raise Exception("Index and location test 2 failed")
 	return 1
+
 #-------Pixel placing functions--------
 usedPixels = {}
 imageIndexMax = 0
@@ -135,7 +137,7 @@ def stitchBitsToImage(image,key,bitData):
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			#print "Writing to %i,%i,%i,%i"%(index,i,j,k)
 			oldColor = image[i][j][k]
-			image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
+			image[i][j][k] = bitTools.writeBitToByte(bitData[n],image[i][j][k],0)
 			if(isThisPixelSafe(image,i,j,k)): #Did changing it make it unsafe now?
 				#print "Good pixel"
 				n += 1
@@ -157,13 +159,13 @@ def extractByteFromImage(image,index):
 		#i,j,k = getLocationOfIndex(image,index)
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			#print "Reading from %i,%i,%i,%i"%(index,i,j,k)
-			bits.append(readBitFromByte(image[i][j][k],0))
+			bits.append(bitTools.readBitFromByte(image[i][j][k],0))
 			n += 1
 		#else:
 			#print "Not reading from %i,%i,%i"%(i,j,k)
 		index += 1	
 	#print "Extracting index %i"%index
-	return index,bitsToByte(bits)
+	return index,bitTools.bitsToByte(bits)
 def extractDataStream(image,key):
 	resetCountersForPixelChanging(image,key)
 	data = []
@@ -203,8 +205,8 @@ def hashImage(image,bitToUse):
 	bits = [0,0,0,0, 0,0,0,0]
 	for i in range(int(len(image)/2),int(len(image)/2)+32):
 		for j in range(8):
-			bits[j] = readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse) 
-		c += bitsToByte(bits)
+			bits[j] = bitTools.readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse) 
+		c += bitTools.bitsToByte(bits)
 	return c	
 				
 def buildIntigerSeedFromImage(image,difficulty):
@@ -239,7 +241,6 @@ def checkImageForCompatability(imageName):
 #---------Tests---------
 def IMDImageModifier_test():
 	indexAndLocation_test()
-	bitFunctions_test()
 	seedAndHash_test()
 	print "Passed: IMDImageModifier tests"
   
