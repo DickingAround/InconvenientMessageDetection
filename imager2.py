@@ -2,32 +2,8 @@ from Crypto.Cipher import AES
 import random
 import IMDEncryption as encryption
 import IMDImageModifier as imageMod
+import os
 
-#-------Decode workflow---------
-def extractDataStream(image,key):
-	data = []
-	fileName = ''
-	byteLenghtValue = 0
-	#-- Get the length --
-	byteLengthString = ''
-	currentByte = '-'
-	i = 0
-	while(currentByte != '*'):	
-		currentByte = imageMod.extractByteFromImage(image,i)
-		byteLengthString += currentByte
-		i += 1
-	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
-	#-- Get the name --
-	currentByte = '-'
-	while(currentByte != '*'):	
-		currentByte = imageMod.extractByteFromImage(image,i)
-		fileName += currentByte
-		i += 1
-	fileName = fileName[:len(fileName)-1]
-	#-- Get the data --
-	for j in range(i,i+byteLengthValue):
-		data.append(imageMod.extractByteFromImage(image,j))
-	return fileName,data
 def buildFile(fileName,data):
 	f = open(fileName,'wb')
 	for c in data:
@@ -77,6 +53,7 @@ def decode(imageName):
 if __name__ == '__main__':
 	import sys
 	if(sys.argv[1] == '-t'):
+		os.system('rm new_testFile')
 		code('testFile.txt','testImg.png')		
 		decode('new_testImg.png')
 		f1 = open('testFile.txt','r')

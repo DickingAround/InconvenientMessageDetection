@@ -54,14 +54,31 @@ def indexAndLocation_test():
 	elif(getIndexOfLocation(image,2,2,2) != 2*7*3+2*3+2):
 		raise Exception("Index and location test 2 failed")
 	return 1
-#-------Functions to check if this bit is safe to change--------
+#-------Pixel placing functions--------
 usedPixels = {}
+imageIndexMax = 0
+def resetCountersForPixelChanging(image,key):
+	random.seed(key)
+	print "Resetting with key:"
+	print key
+	global usedPixels	
+	usedPixels = {}
+	global imageIndexMax 
+	imageIndexMax = len(image)*len(image[0])*len(image[0][0])
+def randomlyFindNextPixel(image):
+	global imageIndexMax
+	i,j,k = getLocationOfIndex(image,int(random.random()*imageIndexMax))
+	#print "got %i,%i,%i"%(i,j,k)
+	if(i == 161 and j == 243 and k == 1):
+		print "I got 161!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	return i,j,k
+#-------Functions to check if this bit is safe to change--------
 def checkAndMarkThisPixel(i,j,k):
 	s = str(i)+'-'+str(j)+'-'+str(k)
 	if not s in usedPixels:
 		usedPixels[s] = True
 		return True
-	print "Im reusing pixel %i,%i,%i"%(i,j,k)
+	#print "Im reusing pixel %i,%i,%i"%(i,j,k)
 	return False
 def isThisPixelSaturated(image,i,j,k):
 	if(image[i][j][k] in [0,1,254,255]):
@@ -75,8 +92,8 @@ def isThisPixelSafe(image,i,j,k):
 	#Or if a nearby bit is saturated
 	#Or if this color is too close to a nearby colora
 	#Or if we already changed this bit
-	
-	if isThisPixelSaturated(image,i,j,k):
+	#TODO: Turn this back on	
+	'''if isThisPixelSaturated(image,i,j,k):
 		return False
 	if(doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i+1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i-1,j,k)
@@ -84,42 +101,47 @@ def isThisPixelSafe(image,i,j,k):
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j-1,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j,k+1)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j,k-1)):
-		return False
+		return False'''
 	if checkAndMarkThisPixel(i,j,k):
 		return True
 	return False
 #-------Image changing functions-------
 def stitchBitsToImage(image,key,bitData):
-	random.seed(key)
-	global usedPixels	
-	usedPixels = {}
+	resetCountersForPixelChanging(image,key)
 	#TODO: This needs to actually jump around randomly
 	n = 0
 	index = 0
 	while n < len(bitData):
-		i,j,k = getLocationOfIndex(image,index)
+		i,j,k = randomlyFindNextPixel(image)
+		#i,j,k = getLocationOfIndex(image,index)
 		if(isThisPixelSafe(image,i,j,k)):
+			print "Writing to %i,%i,%i,%i"%(index,i,j,k)
 			image[i][j][k] = writeBitToByte(bitData[n],image[i][j][k],0)
 			n += 1
+		#else:
+			#print "pixel was unsafe"
 		index += 1
+		#if(n%8 == 0):
+			#print "Pushing index %i"%index
+			
 
 def extractByteFromImage(image,index):
 	bits = []
 	n = 0
 	while n < 8:
-		i,j,k = getLocationOfIndex(image,index)
+		i,j,k = randomlyFindNextPixel(image)
+		#i,j,k = getLocationOfIndex(image,index)
 		if(isThisPixelSafe(image,i,j,k)):
-			#print "Reading from %i,%i,%i"%(i,j,k)
+			print "Reading from %i,%i,%i,%i"%(index,i,j,k)
 			bits.append(readBitFromByte(image[i][j][k],0))
 			n += 1
 		#else:
-			#print "Not reading from %i,%i,%i"%(i,j,k)
+		#	print "Not reading from %i,%i,%i"%(i,j,k)
 		index += 1	
+	#print "Extracting index %i"%index
 	return index,bitsToByte(bits)
 def extractDataStream(image,key):
-	random.seed(key)
-	global usedPixels 
-	usedPixels = {}
+	resetCountersForPixelChanging(image,key)
 	data = []
 	fileName = ''
 	byteLenghtValue = 0
@@ -129,18 +151,22 @@ def extractDataStream(image,key):
 	i = 0
 	while(currentByte != '*'):
 		i,currentByte = extractByteFromImage(image,i)
+		print currentByte
 		byteLengthString += currentByte
 	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
+	print "Im about to get %i"%byteLengthValue	
 	#-- Get the name --
 	currentByte = '-'
 	while(currentByte != '*'):
 		i,currentByte = extractByteFromImage(image,i)
                 fileName += currentByte
+		print currentByte
 	fileName = fileName[:len(fileName)-1]
 	#-- Get the data --
 	for j in range(byteLengthValue):
 		i,currentByte = extractByteFromImage(image,i)
 		data.append(currentByte)
+		print currentByte
 	contents = ''.join(data)
 	return fileName,contents
 
