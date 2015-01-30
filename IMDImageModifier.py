@@ -57,9 +57,11 @@ def indexAndLocation_test():
 #-------Functions to check if this bit is safe to change--------
 usedPixels = {}
 def checkAndMarkThisPixel(i,j,k):
-	if not str(i)+str(j)+str(k) in usedPixels:
-		usedPixels[str(i)+str(j)+str(k)] = True
+	s = str(i)+'-'+str(j)+'-'+str(k)
+	if not s in usedPixels:
+		usedPixels[s] = True
 		return True
+	print "Im reusing pixel %i,%i,%i"%(i,j,k)
 	return False
 def isThisPixelSaturated(image,i,j,k):
 	if(image[i][j][k] in [0,1,254,255]):
@@ -76,7 +78,6 @@ def isThisPixelSafe(image,i,j,k):
 	
 	if isThisPixelSaturated(image,i,j,k):
 		return False
-	'''
 	if(doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i+1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i-1,j,k)
 		or doesThisPixelMakeANearbyOneUnsafe(image,i,j,k,i,j+1,k)
@@ -87,11 +88,11 @@ def isThisPixelSafe(image,i,j,k):
 	if checkAndMarkThisPixel(i,j,k):
 		return True
 	return False
-	'''
-	return True
 #-------Image changing functions-------
 def stitchBitsToImage(image,key,bitData):
 	random.seed(key)
+	global usedPixels	
+	usedPixels = {}
 	#TODO: This needs to actually jump around randomly
 	n = 0
 	index = 0
@@ -117,6 +118,8 @@ def extractByteFromImage(image,index):
 	return index,bitsToByte(bits)
 def extractDataStream(image,key):
 	random.seed(key)
+	global usedPixels 
+	usedPixels = {}
 	data = []
 	fileName = ''
 	byteLenghtValue = 0
