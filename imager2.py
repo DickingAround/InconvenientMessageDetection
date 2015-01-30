@@ -4,6 +4,7 @@ import IMDEncryption as encryption
 import IMDImageModifier as imageMod
 import os
 import IMDBitTools as bitTools
+import IMDSeedGeneration as seedGeneration
 def buildFile(fileName,data):
 	f = open(fileName,'wb')
 	for c in data:
@@ -32,7 +33,7 @@ def code(fileName,imageName):
 		print "Imcompatible image; must be tiff, gif, bmp, or png"
 		return 
 	difficulty = 3
-	key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
+	key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
 	listOfBits = buildBitList(fileName,encryptedContents)
@@ -43,7 +44,7 @@ def decode(imageName):
 	difficulty = 3
 	while(1):
 		print "Trying with difficulty ",difficulty
-		key,iv = imageMod.buildIntigerSeedFromImage(image,difficulty)
+		key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
 		fileName,encryptedContents = imageMod.extractDataStream(image,key)	
 		if fileName != None:
 			break

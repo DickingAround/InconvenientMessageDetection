@@ -197,7 +197,7 @@ def extractDataStream(image,key):
 	return fileName,contents
 
 #-------Seed related functions-------
-def hashImage(image,bitToUse):
+'''def hashImage(image,bitToUse):
 	#Need a string at least 32 long. Take the first 32 rows.
 	#For each row, take the bits and group into 8 to turn into chars.
 	#TODO: Come up with a better system, 
@@ -228,7 +228,7 @@ def seedAndHash_test():
 	image = getImageArray("testImg.png")
 	buildIntigerSeedFromImage(image,3)
 	return 1
-
+'''
 #---------Basic tests to make sure this image will work-------
 def checkImageForCompatability(imageName):
 	imageExtension = imageName.split('.')[1] 
@@ -241,7 +241,7 @@ def checkImageForCompatability(imageName):
 #---------Tests---------
 def IMDImageModifier_test():
 	indexAndLocation_test()
-	seedAndHash_test()
+	#seedAndHash_test()
 	print "Passed: IMDImageModifier tests"
   
 IMDImageModifier_test()
