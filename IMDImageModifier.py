@@ -74,7 +74,8 @@ def checkAndMarkThisPixel(i,j,k):
 	if not s in usedPixels:
 		usedPixels[s] = True
 		return True
-	#print "Im reusing pixel %i,%i,%i"%(i,j,k)
+	if (len(usedPixels) > 0.1*imageIndexMax):
+		raise Exception("The image is too small to contain this data.")
 	return False
 def getColorSafely(image,i,j,k):
 	return image[i%len(image)][j%len(image[0])][k%len(image[0][0])]
