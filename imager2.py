@@ -32,7 +32,7 @@ def code(fileName,imageName):
 	if not imageMod.checkImageForCompatability(imageName):
 		print "Imcompatible image; must be tiff, gif, bmp, or png"
 		return 
-	difficulty = 3
+	difficulty = 4
 	key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
@@ -44,17 +44,21 @@ def decode(imageName):
 	difficulty = 3
 	while(1):
 		print "Trying with difficulty ",difficulty
-		key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
-		fileName,encryptedContents = imageMod.extractDataStream(image,key)	
-		if fileName != None:
-			break
+		try:
+			key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
+			fileName,encryptedContents = imageMod.extractDataStream(image,key)	
+			if fileName != None:
+				print "Found it"
+				break
+		except:
+			print "Didn't succeed"
 		difficulty += 1
 	decryptedContents = encryption.decrypt(encryptedContents,key,iv)
 	buildFile('new_'+fileName,decryptedContents)
 if __name__ == '__main__':
 	import sys
 	if(sys.argv[1] == '-t'):
-		os.system('rm new_testFile')
+		os.system('rm new_testFile.txt')
 		code('testFile.txt','testImg.png')		
 		decode('new_testImg.png')
 		f1 = open('testFile.txt','r')

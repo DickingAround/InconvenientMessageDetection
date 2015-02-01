@@ -141,9 +141,9 @@ def stitchBitsToImage(image,key,bitData):
 			if(isThisPixelSafe(image,i,j,k)): #Did changing it make it unsafe now?
 				#print "Good pixel"
 				n += 1
-			else:
-				#print "No good"
-				image[i][j][k] = oldColor	
+			#else:
+				#Don't revet it, we need to keep it broken so the decryption side isn't confused and get an off-by-1 error on it
+				#image[i][j][k] = oldColor	
 		#else:
 		#	print "pixel was unsafe"
 		index += 1
