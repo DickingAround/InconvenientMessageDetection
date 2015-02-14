@@ -5,5 +5,10 @@ Encyption:
 1. The image is hashed to create a number. That number is used to encrypt the file to be obfuscated. This encryption assures the bits of the file are evenly distributes between 0 and 1.
 2. The image is hashed to create another number. That number is hashed a certain number of times ('x') as specified by the user. The result is used to seed a pseudo-random number generator. 
 3. The speudo-random number generator is then used to decide where the 1s and 0s of the file to be obfuscated into the image. 
-4. For each bit, there is a check to see if the pixel being changed will give away that a file is being obfuscated (e.g. a '1' in a field of '0' saturated color).
+4. For each bit, there is a check to see if the pixel being changed will give away that a file is being obfuscated (e.g. a '1' in a field of '0' saturated color). If the pixel fails before or after the change, the bit is reverted and a different one is picked. 
+
+Decryption:
+1. Same as encryption step 1.
+2. Similar to step 2 except that after each hash, the image is checked to see if there is a file in it. This is continued until it finds a file or a the user stops it.
+3. Same as encryption step 2.
 
