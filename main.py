@@ -5,6 +5,7 @@ import IMDImageModifier as imageMod
 import os
 import IMDBitTools as bitTools
 import IMDSeedGeneration as seedGeneration
+import time
 def buildFile(fileName,data):
 	f = open(fileName,'wb')
 	for c in data:
@@ -27,21 +28,20 @@ def buildBitList(fileName,listOfBytes):
 	return listOfBits
 
 #-------Main---------
-def code(fileName,imageName):
+def code(fileName,imageName,difficultyMultiplier,time):
 	image = imageMod.getImageArray(imageName)
 	if not imageMod.checkImageForCompatability(imageName):
 		print "Imcompatible image; must be tiff, gif, bmp, or png"
 		return 
-	difficulty = 4
 	key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
 	fileContents = readFile(fileName)
 	encryptedContents = encryption.encrypt(fileContents,key,iv)
 	listOfBits = buildBitList(fileName,encryptedContents)
 	imageMod.stitchBitsToImage(image,key,listOfBits)
 	imageMod.saveImage('new_'+imageName,image)
-def decode(imageName):
+def decode(imageName,difficultyMultiplier):
 	image = imageMod.getImageArray(imageName)	
-	difficulty = 3
+	difficulty = 1
 	while(1):
 		print "Trying with difficulty ",difficulty
 		try:
@@ -52,16 +52,17 @@ def decode(imageName):
 				break
 		except:
 			print "Didn't succeed"
-		difficulty += 1
+		difficulty += difficultyMultiplier
 	decryptedContents = encryption.decrypt(encryptedContents,key,iv)
 	buildFile('new_'+fileName,decryptedContents)
 
 if __name__ == '__main__':
 	import sys
+	difficultyMultiplier = 1000000
 	if(sys.argv[1] == '-t'):
 		os.system('rm new_testFile.txt')
-		code('testFile.txt','testImg.png')		
-		decode('new_testImg.png')
+		code('testFile.txt','testImg.png',difficultyMultiplier*3+1)		
+		decode('new_testImg.png',difficultyMultiplier)
 		f1 = open('testFile.txt','r')
 		f2 = open('new_testFile.txt','r')
 		c1 = f1.read()
@@ -69,8 +70,8 @@ if __name__ == '__main__':
 		if(c1 == c2):
 			print "Passed: Overall test to encrypt and decrypt"	
 	elif(sys.argv[2] == 'd'):
-		decode(sys.argv[1])
+		decode(sys.argv[1],difficultyMultiplier)
 	else:
-		code(sys.argv[1],sys.argv[2])
+		code(sys.argv[1],sys.argv[2],difficultyMultiplier,int(sys.argv[3]))
 
 
