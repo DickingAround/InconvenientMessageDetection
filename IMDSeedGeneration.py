@@ -3,7 +3,7 @@ import hashlib
 import IMDBitTools as bitTools
 from scipy import misc
 #-------Seed related functions-------
-def hashImage(image,bitToUse):
+def hashImageToString(image,bitToUse):
 	#Need a string at least 32 long. Take the first 32 rows.
 	#For each row, take the bits and group into 8 to turn into chars.
 	#TODO: Come up with a better system, 
@@ -11,15 +11,25 @@ def hashImage(image,bitToUse):
 	bits = [0,0,0,0, 0,0,0,0]
 	for i in range(int(len(image)/2),int(len(image)/2)+32):
 		for j in range(8):
-			bits[j] = bitTools.readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse) 
+			bits[j] = bitTools.readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse)
 		c += bitTools.bitsToByte(bits)
 	return c	
 
+def hashImageToNumber(image,bitToUse):
+	#The same as the above but with a number	
+	c = ''
+	bits = [0,0,0,0, 0,0,0,0]
+	for i in range(int(len(image)/2),int(len(image)/2)+32):
+		for j in range(8):
+			bits[j] = bitTools.readBitFromByte(image[i][int(len(image[0])/2)+j][1],bitToUse)
+		c += str(ord(bitTools.bitsToByte(bits)))
+	return int(c)
+
 def buildKeySetFromImage(image):
-	randSeed = hashImage(image,2)
+	randSeed = hashImageToNumber(image,2)
 	random.seed(randSeed)
-	iv = hashlib.sha256(hashImage(image,3)).hexdigest()
-	key = hashImage(image,1)
+	iv = hashlib.sha256(hashImageToString(image,3)).hexdigest()
+	key = hashImageToString(image,1)
 	return key,iv
 
 def runHashes(key,iv,numberToRun):

@@ -69,6 +69,7 @@ def decode(imageName,difficultyMultiplier):
 	print "Attempting to decode..."
 	image = imageMod.getImageArray(imageName)
 	key,iv = seedGeneration.buildKeySetFromImage(image)
+	#print key,iv
 	i = 1
 	tReport = time.clock()
 	tFinish = time.clock()
