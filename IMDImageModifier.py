@@ -47,10 +47,11 @@ def checkThisPixel(i,j,k):
 		return True
 def checkAndMarkThisPixel(i,j,k):
 	#We actually want to check every pixel around this one as well
-	#If others nearby are being used, they could affect the valididty of this pixel and we're not checking their validity
+	#If others nearby are being used, then changing this one could affect the valididty of those pixels and we're not checking their validity
+	#Of course we could check their validity but that's actually a bit more complex and I suspect more expensive.
 	if(	checkThisPixel(i+1,j  ,k) and
 		checkThisPixel(i+1,j+1,k) and 
-		checkThisPixel(i+1,j+1,k) and 
+		checkThisPixel(i+1,j-1,k) and 
 		checkThisPixel(i  ,j  ,k) and 
 		checkThisPixel(i  ,j+1,k) and 
 		checkThisPixel(i  ,j-1,k) and 
@@ -60,9 +61,14 @@ def checkAndMarkThisPixel(i,j,k):
 		s = str(i)+'-'+str(j)+'-'+str(k)
 		usedPixels[s] = True
 		return True
-	if (len(usedPixels) > 0.1*imageIndexMax): #2% is just an approximation, no idea what the real number is
+	if (len(usedPixels) > 0.1*imageIndexMax): 
+		#10% is just an approximation of when the image is getting full. 
+		#The real number will depend on the image. 
+		#We just want to pick a number that eventually terminates,
+		#which is any number substantially less than 25% based on how pixels are checked off.
 		raise Exception("The image is too small to contain this data.")
 	return False
+
 def getColorSafely(image,i,j,k):
 	return image[i%len(image)][j%len(image[0])][k%len(image[0][0])]
 def areTheNearbyPixelsTooSimilar(image,i,j,k):
@@ -76,7 +82,7 @@ def areTheNearbyPixelsTooSimilar(image,i,j,k):
 	nearbyColors.append(getColorSafely(image,i-1,j-1,k))
 	nearbyColors.append(getColorSafely(image,i  ,j+1,k))
 	nearbyColors.append(getColorSafely(image,i  ,j-1,k))
-	if(nearbyColors.count(thisColor) > 2): #TODO: Is 4 the right number? Does it work with big files?
+	if(nearbyColors.count(thisColor) > 2): #TODO: Is 2 the right number? We want something that doesn't give away our pixel. 
 		#print "rejected on too similar"
 		return True
 	return False
@@ -104,6 +110,7 @@ def isThisPixelSafe(image,i,j,k):
 	if isThisPixelSaturated(image,i,j-1,k):
 		return False
 	return True
+
 #-------Image changing functions-------
 def stitchBitsToImage(image,key,bitData):
 	resetCountersForPixelChanging(image,key)
@@ -113,17 +120,15 @@ def stitchBitsToImage(image,key,bitData):
 	while n < len(bitData):
 		i,j,k = randomlyFindNextPixel(image)
 		#i,j,k = getLocationOfIndex(image,index)
-		if(i == 98 and j == 245 and k == 0):
-			print "Using the special pixel"
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			oldColor = image[i][j][k]
 			image[i][j][k] = bitTools.writeBitToByte(bitData[n],image[i][j][k],0)
 			if(isThisPixelSafe(image,i,j,k)): #Did changing it make it unsafe now?
 				n += 1
 				f.write("%i,%i,%i\n"%(i,j,k))
-			else:
-				if(i == 98 and j == 245 and k == 0):
-					print "Pixel made unsafe"
+			#else:
+				#if(i == 98 and j == 245 and k == 0):
+					#print "Pixel made unsafe"
 				#Don't revet it, we need to keep it broken so the decryption side isn't confused and get an off-by-1 error on it
 				#image[i][j][k] = oldColor	
 		index += 1
@@ -135,9 +140,6 @@ def extractByteFromImage(image,index,f):
 	while n < 8:
 		i,j,k = randomlyFindNextPixel(image)
 		#i,j,k = getLocationOfIndex(image,index)
-		if(i == 98 and j == 245 and k == 0):
-			print "Got the special pixel for decode"
-			print isThisPixelSafe(image,i,j,k)
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			bits.append(bitTools.readBitFromByte(image[i][j][k],0))
 			n += 1
@@ -146,7 +148,7 @@ def extractByteFromImage(image,index,f):
 			#print "Not reading from %i,%i,%i"%(i,j,k)
 		index += 1	
 	return index,bitTools.bitsToByte(bits)
-def extractDataStream(image,key):
+def extractDataFromImage(image,key):
 	resetCountersForPixelChanging(image,key)
 	data = []
 	fileName = ''
@@ -159,6 +161,10 @@ def extractDataStream(image,key):
 	while(currentByte != '*'):
 		i,currentByte = extractByteFromImage(image,i,f)
 		byteLengthString += currentByte
+		if(len(byteLengthString) > 10):
+			#There should not be more than 10G files hiding in theimage..
+			#Clearly we're getting garbage data
+			raise Exception("File length is an incorrectly long string")
 	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
 	#-- Get the name --
 	currentByte = '-'

@@ -44,15 +44,18 @@ def code(fileName,imageName,difficultyMultiplier,computeTime):
 		if(time.clock() - t > computeTime):
 			break
 		i += 1
-		if(i == 11):
-			break
-	print "Encoded with difficulty %i"%(i*difficultyMultiplier)
+		#if(i == 11):
+		#	break
+	#print "Encoded with difficulty %i"%(i*difficultyMultiplier)
 	keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
-	print keyInt, ivInt
+	#print keyInt, ivInt
 	fileContents = readFile(fileName)
+	#print "File length:",len(fileContents)
 	encryptedContents = encryption.encrypt(fileContents,keyInt,ivInt)
-	print encryptedContents
+	#print encryptedContents
+	#print "encrypted length:",len(encryptedContents)
 	listOfBits = buildBitList(fileName,encryptedContents)
+	#print "Bit length:",len(listOfBits)
 	imageMod.stitchBitsToImage(image,keyInt,listOfBits)
 	imageMod.saveImage('new_'+imageName,image)
 def decode(imageName,difficultyMultiplier):
@@ -70,7 +73,7 @@ def decode(imageName,difficultyMultiplier):
 		#print keyInt, ivInt
 		pseudoRandomState = random.getstate()
 		try:
-			fileName,encryptedContents = imageMod.extractDataStream(image,keyInt)	
+			fileName,encryptedContents = imageMod.extractDataFromImage(image,keyInt)	
 			if fileName != None:
 				print "Found it with difficulty %i"%(difficultyMultiplier*i)
 				break
@@ -79,15 +82,15 @@ def decode(imageName,difficultyMultiplier):
 			1 == 1 #Just keep going
 		random.setstate(pseudoRandomState)
 		i += 1
-		if(i == 11):
-			break
-	print encryptedContents
+		#if(i == 11):
+		#	break
+	#print encryptedContents
 	decryptedContents = encryption.decrypt(encryptedContents,keyInt,ivInt)
 	buildFile('new_'+fileName,decryptedContents)
 
 if __name__ == '__main__':
 	import sys
-	difficultyMultiplier = 1 #1000000
+	difficultyMultiplier = 100000
 	if(sys.argv[1] == '-t'):
 		os.system('rm new_testFile.txt')
 		code('testFile.txt','testImg.png',difficultyMultiplier,1.0)		
@@ -98,7 +101,9 @@ if __name__ == '__main__':
 		c2 = f2.read()
 		if(c1 == c2):
 			print "Passed: Overall test to encrypt and decrypt"	
-	elif(sys.argv[2] == 'd'):
+		else:
+			print "Failed: Overall test to encrypt and decrypt did not match"
+	elif(sys.argv[2] == '-d'):
 		decode(sys.argv[1],difficultyMultiplier)
 	else:
 		code(sys.argv[1],sys.argv[2],difficultyMultiplier,int(sys.argv[3]))
