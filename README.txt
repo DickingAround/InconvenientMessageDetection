@@ -25,9 +25,3 @@ Decryption:
 1. Same as encryption step 1.
 2. Similar to step 2 except that after each hash, the image is checked to see if there is a file in it. This is continued until it finds a file or a the user stops it.
 3. Same as encryption step 2.
-
-PROBLEMS:
-* When not using pixel filtering things work
-* For large numbers of hash things work
-* For small contents things work
-* For small numbers of hash things don't work?
