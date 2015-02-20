@@ -41,12 +41,26 @@ def randomlyFindNextPixel(image):
 	global imageIndexMax
 	return getLocationOfIndex(image,int(random.random()*imageIndexMax))
 #-------Functions to check if this bit is safe to change--------
-def checkAndMarkThisPixel(i,j,k):
+def checkThisPixel(i,j,k):
 	s = str(i)+'-'+str(j)+'-'+str(k)
 	if not s in usedPixels:
+		return True
+def checkAndMarkThisPixel(i,j,k):
+	#We actually want to check every pixel around this one as well
+	#If others nearby are being used, they could affect the valididty of this pixel and we're not checking their validity
+	if(	checkThisPixel(i+1,j  ,k) and
+		checkThisPixel(i+1,j+1,k) and 
+		checkThisPixel(i+1,j+1,k) and 
+		checkThisPixel(i  ,j  ,k) and 
+		checkThisPixel(i  ,j+1,k) and 
+		checkThisPixel(i  ,j-1,k) and 
+		checkThisPixel(i-1,j  ,k) and 
+		checkThisPixel(i-1,j+1,k) and 
+		checkThisPixel(i-1,j-1,k)):
+		s = str(i)+'-'+str(j)+'-'+str(k)
 		usedPixels[s] = True
 		return True
-	if (len(usedPixels) > 0.1*imageIndexMax):
+	if (len(usedPixels) > 0.1*imageIndexMax): #2% is just an approximation, no idea what the real number is
 		raise Exception("The image is too small to contain this data.")
 	return False
 def getColorSafely(image,i,j,k):
@@ -62,7 +76,8 @@ def areTheNearbyPixelsTooSimilar(image,i,j,k):
 	nearbyColors.append(getColorSafely(image,i-1,j-1,k))
 	nearbyColors.append(getColorSafely(image,i  ,j+1,k))
 	nearbyColors.append(getColorSafely(image,i  ,j-1,k))
-	if(nearbyColors.count(thisColor) > 4): #TODO: Is 4 the right number? Does it work with big files?
+	if(nearbyColors.count(thisColor) > 2): #TODO: Is 4 the right number? Does it work with big files?
+		#print "rejected on too similar"
 		return True
 	return False
 	
@@ -94,28 +109,39 @@ def stitchBitsToImage(image,key,bitData):
 	resetCountersForPixelChanging(image,key)
 	n = 0
 	index = 0
+	f = open('PixelLogIn.txt','w')
 	while n < len(bitData):
 		i,j,k = randomlyFindNextPixel(image)
 		#i,j,k = getLocationOfIndex(image,index)
+		if(i == 98 and j == 245 and k == 0):
+			print "Using the special pixel"
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			oldColor = image[i][j][k]
 			image[i][j][k] = bitTools.writeBitToByte(bitData[n],image[i][j][k],0)
 			if(isThisPixelSafe(image,i,j,k)): #Did changing it make it unsafe now?
 				n += 1
-			#else:
+				f.write("%i,%i,%i\n"%(i,j,k))
+			else:
+				if(i == 98 and j == 245 and k == 0):
+					print "Pixel made unsafe"
 				#Don't revet it, we need to keep it broken so the decryption side isn't confused and get an off-by-1 error on it
 				#image[i][j][k] = oldColor	
 		index += 1
+	f.close()
 
-def extractByteFromImage(image,index):
+def extractByteFromImage(image,index,f):
 	bits = []
 	n = 0
 	while n < 8:
 		i,j,k = randomlyFindNextPixel(image)
 		#i,j,k = getLocationOfIndex(image,index)
+		if(i == 98 and j == 245 and k == 0):
+			print "Got the special pixel for decode"
+			print isThisPixelSafe(image,i,j,k)
 		if(checkAndMarkThisPixel(i,j,k) and isThisPixelSafe(image,i,j,k)):
 			bits.append(bitTools.readBitFromByte(image[i][j][k],0))
 			n += 1
+			f.write("%i,%i,%i\n"%(i,j,k))
 		#else:
 			#print "Not reading from %i,%i,%i"%(i,j,k)
 		index += 1	
@@ -129,21 +155,23 @@ def extractDataStream(image,key):
 	byteLengthString = ''
 	currentByte = '-'
 	i = 0
+	f = open('PixelLogOut.txt','w')
 	while(currentByte != '*'):
-		i,currentByte = extractByteFromImage(image,i)
+		i,currentByte = extractByteFromImage(image,i,f)
 		byteLengthString += currentByte
 	byteLengthValue = int(byteLengthString[:len(byteLengthString)-1])
 	#-- Get the name --
 	currentByte = '-'
 	while(currentByte != '*'):
-		i,currentByte = extractByteFromImage(image,i)
+		i,currentByte = extractByteFromImage(image,i,f)
                 fileName += currentByte
 	fileName = fileName[:len(fileName)-1]
 	#-- Get the data --
 	for j in range(byteLengthValue):
-		i,currentByte = extractByteFromImage(image,i)
+		i,currentByte = extractByteFromImage(image,i,f)
 		data.append(currentByte)
 	contents = ''.join(data)
+	f.close()
 	return fileName,contents
 
 #---------Basic tests to make sure this image will work-------

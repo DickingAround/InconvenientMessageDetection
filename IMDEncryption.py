@@ -1,6 +1,6 @@
 from Crypto.Cipher import AES
 def encrypt(raw_text, key, iv):
-	#return raw_text
+	return raw_text
 	#We don't technically need the initalization vector *and* key here 
 	#since we're deriving both from the content, 
 	#but no harm in having them and it's better not to break the
@@ -15,7 +15,7 @@ def encrypt(raw_text, key, iv):
 	return encryptor.encrypt(plain_text)
 
 def decrypt(cypher_text,key, iv):
-	#return cypher_text
+	return cypher_text
 	iv = iv[:16]#IV must be 16 bytes long
 	key = key[:32]#key must be 32 bytes long
         decryptor = AES.new(key, AES.MODE_CBC, IV=iv)

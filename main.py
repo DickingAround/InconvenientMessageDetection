@@ -28,40 +28,69 @@ def buildBitList(fileName,listOfBytes):
 	return listOfBits
 
 #-------Main---------
-def code(fileName,imageName,difficultyMultiplier,time):
+def code(fileName,imageName,difficultyMultiplier,computeTime):
 	image = imageMod.getImageArray(imageName)
 	if not imageMod.checkImageForCompatability(imageName):
 		print "Imcompatible image; must be tiff, gif, bmp, or png"
-		return 
-	key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
+		return
+	key,iv = seedGeneration.buildKeySetFromImage(image)
+	#Compute the hash based on how long we have to do it
+	t = time.clock()
+	i = 1
+	while True: #We must do it at least once to reformat the key
+		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
+		#keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
+		#print keyInt,ivInt
+		if(time.clock() - t > computeTime):
+			break
+		i += 1
+		if(i == 11):
+			break
+	print "Encoded with difficulty %i"%(i*difficultyMultiplier)
+	keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
+	print keyInt, ivInt
 	fileContents = readFile(fileName)
-	encryptedContents = encryption.encrypt(fileContents,key,iv)
+	encryptedContents = encryption.encrypt(fileContents,keyInt,ivInt)
+	print encryptedContents
 	listOfBits = buildBitList(fileName,encryptedContents)
-	imageMod.stitchBitsToImage(image,key,listOfBits)
+	imageMod.stitchBitsToImage(image,keyInt,listOfBits)
 	imageMod.saveImage('new_'+imageName,image)
 def decode(imageName,difficultyMultiplier):
-	image = imageMod.getImageArray(imageName)	
-	difficulty = 1
-	while(1):
-		print "Trying with difficulty ",difficulty
+	print "Attempting to decode..."
+	image = imageMod.getImageArray(imageName)
+	key,iv = seedGeneration.buildKeySetFromImage(image)
+	i = 1
+	t = time.clock()
+	while True:
+		if(time.clock() - t > 5.0):
+			t = time.clock()	
+		print "Trying with difficulty %i"%(difficultyMultiplier*i)
+		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
+		keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
+		#print keyInt, ivInt
+		pseudoRandomState = random.getstate()
 		try:
-			key,iv = seedGeneration.buildIntigerSeedFromImage(image,difficulty)
-			fileName,encryptedContents = imageMod.extractDataStream(image,key)	
+			fileName,encryptedContents = imageMod.extractDataStream(image,keyInt)	
 			if fileName != None:
-				print "Found it"
+				print "Found it with difficulty %i"%(difficultyMultiplier*i)
 				break
 		except:
-			print "Didn't succeed"
-		difficulty += difficultyMultiplier
-	decryptedContents = encryption.decrypt(encryptedContents,key,iv)
+			#print "Didn't find it"
+			1 == 1 #Just keep going
+		random.setstate(pseudoRandomState)
+		i += 1
+		if(i == 11):
+			break
+	print encryptedContents
+	decryptedContents = encryption.decrypt(encryptedContents,keyInt,ivInt)
 	buildFile('new_'+fileName,decryptedContents)
 
 if __name__ == '__main__':
 	import sys
-	difficultyMultiplier = 1000000
+	difficultyMultiplier = 1 #1000000
 	if(sys.argv[1] == '-t'):
 		os.system('rm new_testFile.txt')
-		code('testFile.txt','testImg.png',difficultyMultiplier*3+1)		
+		code('testFile.txt','testImg.png',difficultyMultiplier,1.0)		
 		decode('new_testImg.png',difficultyMultiplier)
 		f1 = open('testFile.txt','r')
 		f2 = open('new_testFile.txt','r')
