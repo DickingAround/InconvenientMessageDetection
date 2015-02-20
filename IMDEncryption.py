@@ -39,4 +39,4 @@ def IMDEncryption_test():
 		print "New msg: ",msg_found
 		return 0
 
-IMDEncryption_test()
+#IMDEncryption_test()

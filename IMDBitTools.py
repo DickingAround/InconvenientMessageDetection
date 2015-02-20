@@ -28,4 +28,4 @@ def IMDBitTools_test():
 	print "Passed: IMDImageModifier tests"
 	return True
 
-IMDBitTools_test()
+#IMDBitTools_test()

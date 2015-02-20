@@ -1,3 +1,17 @@
+--------------------How to use it------------------
+./main.py -help
+Prints these instructions.
+
+./main.py -t
+Runs the unit and integration tests.
+
+./main.py <imageName> <fileName> <numberOfSecondsToUseComputingTheObfuscation>
+Obfuscates the file into the image.
+
+./main.py <imageName> -d
+De-obfuscates the file until complete. If there is no file in the image this will never finish.
+
+--------------------How it works------------------
 Goal: To obscure data in an image such that it takes compute power to find that data.
 
 How does it work, at a high level:

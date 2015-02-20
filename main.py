@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from Crypto.Cipher import AES
 import random
 import IMDEncryption as encryption
@@ -46,7 +47,7 @@ def code(fileName,imageName,difficultyMultiplier,computeTime):
 		i += 1
 		#if(i == 11):
 		#	break
-	#print "Encoded with difficulty %i"%(i*difficultyMultiplier)
+	print "Encoded with difficulty %i"%(i*difficultyMultiplier)
 	keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
 	#print keyInt, ivInt
 	fileContents = readFile(fileName)
@@ -91,9 +92,27 @@ def decode(imageName,difficultyMultiplier):
 if __name__ == '__main__':
 	import sys
 	difficultyMultiplier = 100000
-	if(sys.argv[1] == '-t'):
+	if(sys.argv[1] == '-help'):
+		print """
+./main.py -help
+Prints these instructions.
+
+./main.py -t
+Runs the unit and integration tests.
+
+./main.py <imageName> <fileName> <numberOfSecondsToUseComputingTheObfuscation>
+Obfuscates the file into the image.
+
+./main.py <imageName> -d
+De-obfuscates the file until complete. If there is no file in the image this will never finish.
+"""
+	elif(sys.argv[1] == '-t'):
+		encryption.IMDEncryption_test()
+		imageMod.IMDImageModifier_test()
+		bitTools.IMDBitTools_test()
+		seedGeneration.IMDSeedGeneration_test()
 		os.system('rm new_testFile.txt')
-		code('testFile.txt','testImg.png',difficultyMultiplier,1.0)		
+		code('testFile.txt','testImg.png',difficultyMultiplier,2.0)		
 		decode('new_testImg.png',difficultyMultiplier)
 		f1 = open('testFile.txt','r')
 		f2 = open('new_testFile.txt','r')

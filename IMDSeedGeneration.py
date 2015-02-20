@@ -57,4 +57,4 @@ def IMDSeedGeneration_test():
 	print "Passed: IMDSeedGeneration"
 	return True
 
-IMDSeedGeneration_test()
+#IMDSeedGeneration_test()

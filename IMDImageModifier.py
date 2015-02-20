@@ -194,4 +194,4 @@ def IMDImageModifier_test():
 	#seedAndHash_test()
 	print "Passed: IMDImageModifier tests"
   
-IMDImageModifier_test()
+#IMDImageModifier_test()
