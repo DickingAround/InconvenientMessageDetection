@@ -5,11 +5,11 @@ Prints these instructions.
 ./main.py -t
 Runs the unit and integration tests.
 
-./main.py <imageName> <fileName> <numberOfSecondsToUseComputingTheObfuscation>
-Obfuscates the file into the image.
+./main.py <fileName> <imageName> <numberOfSecondsToUseComputingTheObfuscation>
+Obfuscates the file into the image. The new image will have '_new' at the end.
 
-./main.py <imageName> -d
-De-obfuscates the file until complete. If there is no file in the image this will never finish.
+./main.py -d <imageName> 
+De-obfuscates the file until complete. The new file will have the same name as the origional except with '_new' at the end. If there is no file in the image this will never finish.
 
 --------------------How it works------------------
 Goal: To obscure data in an image such that it takes compute power to find that data.

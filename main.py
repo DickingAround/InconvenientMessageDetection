@@ -7,8 +7,10 @@ import os
 import IMDBitTools as bitTools
 import IMDSeedGeneration as seedGeneration
 import time
-def buildFile(fileName,data):
-	f = open(fileName,'wb')
+def buildFile(name,data):
+	nameParts = name.rsplit('.',1)
+	newName = nameParts[0] + '_new.' + nameParts[1]
+	f = open(newName,'wb')
 	for c in data:
 		f.write(c)
 	f.close()	
@@ -36,13 +38,17 @@ def code(fileName,imageName,difficultyMultiplier,computeTime):
 		return
 	key,iv = seedGeneration.buildKeySetFromImage(image)
 	#Compute the hash based on how long we have to do it
-	t = time.clock()
+	tFinish = time.clock()
+	tReport = time.clock()
 	i = 1
 	while True: #We must do it at least once to reformat the key
 		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
 		#keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
 		#print keyInt,ivInt
-		if(time.clock() - t > computeTime):
+		if(time.clock() - tReport > 5.0):
+			tReport = time.clock()
+			print "Working on difficulty %i. Worked %i seconds so far."%((i*difficultyMultiplier),(int(time.clock() - tFinish)))
+		if(time.clock() - tFinish > computeTime):
 			break
 		i += 1
 		#if(i == 11):
@@ -58,17 +64,18 @@ def code(fileName,imageName,difficultyMultiplier,computeTime):
 	listOfBits = buildBitList(fileName,encryptedContents)
 	#print "Bit length:",len(listOfBits)
 	imageMod.stitchBitsToImage(image,keyInt,listOfBits)
-	imageMod.saveImage('new_'+imageName,image)
+	imageMod.saveImage(imageName,image)
 def decode(imageName,difficultyMultiplier):
 	print "Attempting to decode..."
 	image = imageMod.getImageArray(imageName)
 	key,iv = seedGeneration.buildKeySetFromImage(image)
 	i = 1
-	t = time.clock()
+	tReport = time.clock()
+	tFinish = time.clock()
 	while True:
-		if(time.clock() - t > 5.0):
-			t = time.clock()	
-		print "Trying with difficulty %i"%(difficultyMultiplier*i)
+		if(time.clock() - tReport > 5.0):
+			tReport = time.clock()	
+			print "Trying with difficulty %i. Worked %i seconds so far."%((difficultyMultiplier*i),(int(time.clock() - tFinish)))
 		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
 		keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
 		#print keyInt, ivInt
@@ -87,7 +94,7 @@ def decode(imageName,difficultyMultiplier):
 		#	break
 	#print encryptedContents
 	decryptedContents = encryption.decrypt(encryptedContents,keyInt,ivInt)
-	buildFile('new_'+fileName,decryptedContents)
+	buildFile(fileName,decryptedContents)
 
 if __name__ == '__main__':
 	import sys
@@ -100,30 +107,32 @@ Prints these instructions.
 ./main.py -t
 Runs the unit and integration tests.
 
-./main.py <imageName> <fileName> <numberOfSecondsToUseComputingTheObfuscation>
-Obfuscates the file into the image.
+./main.py <fileName> <imageName> <numberOfSecondsToUseComputingTheObfuscation>
+Obfuscates the file into the image. The new image will have '_new' at the end.
 
-./main.py <imageName> -d
-De-obfuscates the file until complete. If there is no file in the image this will never finish.
+./main.py -d <imageName>
+De-obfuscates the file until complete. The new file will have the same name as the origional except with '_new' at the end. If there is no file in the image this will never finish.
+
 """
 	elif(sys.argv[1] == '-t'):
 		encryption.IMDEncryption_test()
 		imageMod.IMDImageModifier_test()
 		bitTools.IMDBitTools_test()
 		seedGeneration.IMDSeedGeneration_test()
-		os.system('rm new_testFile.txt')
+		os.system('rm testFile_new.txt')
+		os.system('rm testImg_new.png')
 		code('testFile.txt','testImg.png',difficultyMultiplier,2.0)		
-		decode('new_testImg.png',difficultyMultiplier)
+		decode('testImg_new.png',difficultyMultiplier)
 		f1 = open('testFile.txt','r')
-		f2 = open('new_testFile.txt','r')
+		f2 = open('testFile_new.txt','r')
 		c1 = f1.read()
 		c2 = f2.read()
 		if(c1 == c2):
 			print "Passed: Overall test to encrypt and decrypt"	
 		else:
 			print "Failed: Overall test to encrypt and decrypt did not match"
-	elif(sys.argv[2] == '-d'):
-		decode(sys.argv[1],difficultyMultiplier)
+	elif(sys.argv[1] == '-d'):
+		decode(sys.argv[2],difficultyMultiplier)
 	else:
 		code(sys.argv[1],sys.argv[2],difficultyMultiplier,int(sys.argv[3]))
 

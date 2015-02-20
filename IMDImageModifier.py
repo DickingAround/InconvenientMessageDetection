@@ -6,7 +6,9 @@ from scipy import misc
 def getImageArray(imageName):
 	return misc.imread(imageName)
 def saveImage(name, image):
-	misc.imsave(name, image)
+	nameParts = name.rsplit('.',1)
+	newName = nameParts[0] + '_new.' + nameParts[1]
+	misc.imsave(newName, image)
 
 #-------Image index functions------------
 def getIndexOfLocation(image,i,k,j):
