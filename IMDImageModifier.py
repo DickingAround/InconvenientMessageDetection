@@ -34,7 +34,7 @@ def indexAndLocation_test():
 usedPixels = {}
 imageIndexMax = 0
 def resetCountersForPixelChanging(image,key):
-	random.seed(key)
+	random.seed(int(key)) #seeding doesn't work with non-numbers
 	global usedPixels	
 	usedPixels = {}
 	global imageIndexMax 

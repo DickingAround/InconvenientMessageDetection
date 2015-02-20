@@ -87,6 +87,7 @@ def decode(imageName,difficultyMultiplier):
 				print "Found it with difficulty %i"%(difficultyMultiplier*i)
 				break
 		except:
+			#print sys.exc_info()	
 			#print "Didn't find it"
 			1 == 1 #Just keep going
 		random.setstate(pseudoRandomState)

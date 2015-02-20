@@ -28,6 +28,7 @@ def hashImageToNumber(image,bitToUse):
 def buildKeySetFromImage(image):
 	randSeed = hashImageToNumber(image,2)
 	random.seed(randSeed)
+	#print "seeing with ",randSeed
 	iv = hashlib.sha256(hashImageToString(image,3)).hexdigest()
 	key = hashImageToString(image,1)
 	return key,iv
@@ -52,7 +53,7 @@ def buildIntigerSeedFromImageByDifficulty(image,difficulty):
 #-------Tests------------------
 def IMDSeedGeneration_test():
 	image = [[[4,4,4] for x in range(100)] for x in range(100)]
-	h_got = hashImage(image,2)
+	h_got = hashImageToString(image,2)
 	h_expected = '\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
 	if(h_got != h_expected):
 		raise Exception("Hash of image test failed")
