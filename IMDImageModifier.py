@@ -114,6 +114,14 @@ def isThisPixelSafe(image,i,j,k):
 	return True
 
 #-------Image changing functions-------
+def buildBitList(fileName,listOfBytes):
+        listOfBits = []
+        for byte in listOfBytes:
+                listOfBits += bitTools.byteToBits(byte)
+        listOfBits = bitTools.byteArrayToBitArray(fileName+"*") + listOfBits
+        listOfBits = bitTools.byteArrayToBitArray(str(len(listOfBytes))+"*") + listOfBits
+        return listOfBits
+
 def stitchBitsToImage(image,key,bitData):
 	resetCountersForPixelChanging(image,key)
 	n = 0

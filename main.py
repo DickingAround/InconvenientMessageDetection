@@ -7,69 +7,64 @@ import os
 import IMDBitTools as bitTools
 import IMDSeedGeneration as seedGeneration
 import time
-def buildFile(name,data):
+
+#-------File writing functions---------
+def writeFile(name,data):
+	#Add 'new' to the name of any encoded file so anyone 
+	#testing it doesn't accidentialy overwrite their origional file.
 	nameParts = name.rsplit('.',1)
 	newName = nameParts[0] + '_new.' + nameParts[1]
+	print "Writing file '"+ newName + "'"
 	f = open(newName,'wb')
 	for c in data:
 		f.write(c)
 	f.close()	
-
-#-------Encode workflow---------
 def readFile(fileName):
 	f = open(fileName,'rb')
 	data = f.read()
 	f.close()
 	return data	
-def buildBitList(fileName,listOfBytes):
-	listOfBits = []
-	#fileLength*fileName*bitsOfTheFile
-	for byte in listOfBytes:
-		listOfBits += bitTools.byteToBits(byte)	
-	listOfBits = bitTools.byteArrayToBitArray(fileName+"*") + listOfBits
-	listOfBits = bitTools.byteArrayToBitArray(str(len(listOfBytes))+"*") + listOfBits
-	return listOfBits
 
-#-------Main---------
+#-------Core code and decode workflows---------
 def code(fileName,imageName,difficultyMultiplier,computeTime):
+	#Load the image
 	image = imageMod.getImageArray(imageName)
 	if not imageMod.checkImageForCompatability(imageName):
 		print "Imcompatible image; must be tiff, gif, bmp, or png"
 		return
+
+	#Create the keys used to encode the data
 	key,iv = seedGeneration.buildKeySetFromImage(image)
-	#Compute the hash based on how long we have to do it
-	tFinish = time.clock()
-	tReport = time.clock()
-	i = 1
-	while True: #We must do it at least once to reformat the key
+	tFinish = time.clock() #Track total CPU time used so far
+	tReport = time.clock() #Track time until next update to the user
+	i = 1 #Track now many times we hash, just to tell the user
+	while True: #We must hash at least once to reformat the key
 		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
-		#keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
-		#print keyInt,ivInt
 		if(time.clock() - tReport > 5.0):
 			tReport = time.clock()
 			print "Working on difficulty %i. Worked %i seconds so far."%((i*difficultyMultiplier),(int(time.clock() - tFinish)))
 		if(time.clock() - tFinish > computeTime):
 			break
 		i += 1
-		#if(i == 11):
-		#	break
-	print "Encoded with difficulty %i"%(i*difficultyMultiplier)
+	print "Encoding with difficulty %i"%(i*difficultyMultiplier)
 	keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
-	#print keyInt, ivInt
+
+	#Read the file, encrypt it, and build the special bitstream needed
 	fileContents = readFile(fileName)
-	#print "File length:",len(fileContents)
 	encryptedContents = encryption.encrypt(fileContents,keyInt,ivInt)
-	#print encryptedContents
-	#print "encrypted length:",len(encryptedContents)
-	listOfBits = buildBitList(fileName,encryptedContents)
-	#print "Bit length:",len(listOfBits)
+	listOfBits = imageMod.buildBitList(fileName,encryptedContents)
+
+	#Modify the image and save it under a new name
 	imageMod.stitchBitsToImage(image,keyInt,listOfBits)
 	imageMod.saveImage(imageName,image)
+
 def decode(imageName,difficultyMultiplier):
 	print "Attempting to decode..."
+	#Load the image
 	image = imageMod.getImageArray(imageName)
+
+	#Search for a key to the image
 	key,iv = seedGeneration.buildKeySetFromImage(image)
-	#print key,iv
 	i = 1
 	tReport = time.clock()
 	tFinish = time.clock()
@@ -79,7 +74,6 @@ def decode(imageName,difficultyMultiplier):
 			print "Trying with difficulty %i. Worked %i seconds so far."%((difficultyMultiplier*i),(int(time.clock() - tFinish)))
 		key,iv = seedGeneration.runHashes(key,iv,difficultyMultiplier)
 		keyInt,ivInt = seedGeneration.convertToIntigers(key,iv)
-		#print keyInt, ivInt
 		pseudoRandomState = random.getstate()
 		try:
 			fileName,encryptedContents = imageMod.extractDataFromImage(image,keyInt)	
@@ -87,20 +81,18 @@ def decode(imageName,difficultyMultiplier):
 				print "Found it with difficulty %i"%(difficultyMultiplier*i)
 				break
 		except:
-			#print sys.exc_info()	
-			#print "Didn't find it"
-			1 == 1 #Just keep going
+			1 == 1 #Just keep going, try a new one
 		random.setstate(pseudoRandomState)
 		i += 1
-		#if(i == 11):
-		#	break
-	#print encryptedContents
+
+	#Now that we have the extracted data, decrypt and save it
 	decryptedContents = encryption.decrypt(encryptedContents,keyInt,ivInt)
-	buildFile(fileName,decryptedContents)
+	writeFile(fileName,decryptedContents)
 
 if __name__ == '__main__':
 	import sys
 	difficultyMultiplier = 100000
+	#--- HELP ---
 	if(sys.argv[1] == '-help'):
 		print """
 ./main.py -help
@@ -116,6 +108,7 @@ Obfuscates the file into the image. The new image will have '_new' at the end.
 De-obfuscates the file until complete. The new file will have the same name as the origional except with '_new' at the end. If there is no file in the image this will never finish.
 
 """
+	#--- TEST ---
 	elif(sys.argv[1] == '-t'):
 		encryption.IMDEncryption_test()
 		imageMod.IMDImageModifier_test()
@@ -133,8 +126,10 @@ De-obfuscates the file until complete. The new file will have the same name as t
 			print "Passed: Overall test to encrypt and decrypt"	
 		else:
 			print "Failed: Overall test to encrypt and decrypt did not match"
+	#--- DECODE ---
 	elif(sys.argv[1] == '-d'):
 		decode(sys.argv[2],difficultyMultiplier)
+	#--- ENCODE ---
 	else:
 		code(sys.argv[1],sys.argv[2],difficultyMultiplier,int(sys.argv[3]))
 
