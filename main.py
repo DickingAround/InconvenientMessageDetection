@@ -104,7 +104,9 @@ def main_test():
 	c2 = f2.read()
 	if(c1 != c2):
 		print "Failed: Overall test to encrypt and decrypt did not match"
-		return 0
+		return 0	
+	os.system('rm testImg_new.png')
+	os.system('rm testFile_new.txt')
 	print "Passed: End-to-end integration tests.\n"
 	return 1
 
