@@ -89,6 +89,26 @@ def decode(imageName,difficultyMultiplier):
 	decryptedContents = encryption.decrypt(encryptedContents,keyInt,ivInt)
 	writeFile(fileName,decryptedContents)
 
+def main_test():
+	encryption.IMDEncryption_test()
+	imageMod.IMDImageModifier_test()
+	bitTools.IMDBitTools_test()
+	seedGeneration.IMDSeedGeneration_test()
+	os.system('rm testFile_new.txt')
+	os.system('rm testImg_new.png')
+	code('testFile.txt','testImg.png',difficultyMultiplier,2.0)		
+	decode('testImg_new.png',difficultyMultiplier)
+	f1 = open('testFile.txt','r')
+	f2 = open('testFile_new.txt','r')
+	c1 = f1.read()
+	c2 = f2.read()
+	if(c1 != c2):
+		print "Failed: Overall test to encrypt and decrypt did not match"
+		return 0
+	print "Passed: End-to-end integration tests.\n"
+	return 1
+
+
 if __name__ == '__main__':
 	import sys
 	difficultyMultiplier = 100000
@@ -110,22 +130,7 @@ De-obfuscates the file until complete. The new file will have the same name as t
 """
 	#--- TEST ---
 	elif(sys.argv[1] == '-t'):
-		encryption.IMDEncryption_test()
-		imageMod.IMDImageModifier_test()
-		bitTools.IMDBitTools_test()
-		seedGeneration.IMDSeedGeneration_test()
-		os.system('rm testFile_new.txt')
-		os.system('rm testImg_new.png')
-		code('testFile.txt','testImg.png',difficultyMultiplier,2.0)		
-		decode('testImg_new.png',difficultyMultiplier)
-		f1 = open('testFile.txt','r')
-		f2 = open('testFile_new.txt','r')
-		c1 = f1.read()
-		c2 = f2.read()
-		if(c1 == c2):
-			print "Passed: Overall test to encrypt and decrypt"	
-		else:
-			print "Failed: Overall test to encrypt and decrypt did not match"
+		main_test()	
 	#--- DECODE ---
 	elif(sys.argv[1] == '-d'):
 		decode(sys.argv[2],difficultyMultiplier)

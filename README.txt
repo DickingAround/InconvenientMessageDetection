@@ -65,3 +65,10 @@ Q: Why use AES to encrypt the message?
 A: I picked a symmetric encryption algorithm at random. It's only real job is to even the distribution of bits in the secret file such that there's no pattern of more '1's or '0's in the image.
 
 Feel free to swap it out for another for your own use.
+
+
+
+----Future----
+* App that takes pics, encodes and sends them.
+* Browser plugin that reads when you click one.
+* Also encrypt, decode to find but once you find you need a password
